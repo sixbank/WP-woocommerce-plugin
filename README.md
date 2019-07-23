@@ -1,7 +1,7 @@
 # Woocomerce
 Woocommerce 3.6.4
 
-#Pré-requisitos
+# Pré-requisitos
  - Wordpress 5.2.2
  - Woocommerce 3.6.4
 
@@ -11,7 +11,7 @@ Woocommerce 3.6.4
 > 3. Fazer upload e instalação do arquivo sixbank-woocommerce.zip 
 
 
-#Configuração dos meios de pagamento
+# Configuração dos meios de pagamento
 > Ao instalar o plugin, as opções de pagamento ficarão disponíveis em: WooCommerce > Configurações > Pagamentos.
 > - Sixbank - Cartão de Crédito
 > - Sixbank - Cartão de Débito
