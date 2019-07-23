@@ -19,3 +19,7 @@ Woocommerce 3.6.4
 > - Sixbank - Transferência
 
 > Entrar em Gerenciar, na opção de pagamento, adicionar o Merchant ID e Merchant Key e configurar outras opções.
+
+# Loja de demonstração
+> Loja de demonstração com o plugin rodando e configurado.
+http://homolog-gateway.evolutap.com.br
