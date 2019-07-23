@@ -1,4 +1,4 @@
-# Woocomerce
+# Woocomerce SixBank - Plugin para pagamentos
 Woocommerce 3.6.4
 
 # Pré-requisitos
