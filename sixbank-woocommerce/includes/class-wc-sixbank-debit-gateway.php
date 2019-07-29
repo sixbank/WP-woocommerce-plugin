@@ -1,4 +1,8 @@
 <?php
+namespace sixbank\payment;
+use \sixbank\helper\WC_Sixbank_Helper as WC_Sixbank_Helper;
+
+use \Gateway\API\Acquirers as Acquirers;
 /**
  * WC Sixbank Debit Gateway Class.
  *
@@ -50,7 +54,7 @@ class WC_Sixbank_Debit_Gateway extends WC_Sixbank_Helper {
 		}
 
 		// Set the API.
-		$this->api = new WC_Sixbank_API( $this );
+		$this->api = new \sixbank\api\WC_Sixbank_API( $this );
 
 		// Actions.
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
@@ -217,7 +221,7 @@ class WC_Sixbank_Debit_Gateway extends WC_Sixbank_Helper {
 				'discount_total' => $this->get_debit_discount( $order_total ),
 			),
 			'woocommerce/sixbank/',
-			WC_Sixbank::get_templates_path()
+			\sixbank\WC_Sixbank::get_templates_path()
 		);
 	}
 
@@ -427,7 +431,7 @@ class WC_Sixbank_Debit_Gateway extends WC_Sixbank_Helper {
 				$discount_total = $this->get_debit_discount( (float) $order->get_total() );
 
 				$items['payment_method']['value'] .= ' ';
-				$items['payment_method']['value'] .= sprintf( __( 'with discount of %s. Order Total: %s.', 'sixbank-woocommerce' ), $this->debit_discount . '%', sanitize_text_field( woocommerce_price( $discount_total ) ) );
+				$items['payment_method']['value'] .= sprintf( __( 'with discount of %s. Order Total: %s.', 'sixbank-woocommerce' ), $this->debit_discount . '%', sanitize_text_field( wc_price( $discount_total ) ) );
 			}
 
 			$items['payment_method']['value'] .= '</small>';

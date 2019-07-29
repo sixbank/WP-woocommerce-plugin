@@ -31,9 +31,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	</p>	
 	<?php if ( 0 < $discount ) : ?>		
 		<p class="form-row form-row-wide discount">
-			<?php printf( __( 'Payment by debit have discount of %s. Order Total: %s.', 'sixbank-woocommerce' ), $discount . '%', sanitize_text_field( woocommerce_price( $discount_total ) ) ); ?>
+			<?php printf( __( 'Payment by debit have discount of %s. Order Total: %s.', 'sixbank-woocommerce' ), $discount . '%', sanitize_text_field( wc_price( $discount_total ) ) ); ?>
 		</p>
-		<p style="display: none" class="discount-text"><?php printf( '%s', sanitize_text_field( woocommerce_price( $discount_total ) ) ); ?><p>
+		<p style="display: none" class="discount-text"><?php printf( '%s', sanitize_text_field( wc_price( $discount_total ) ) ); ?><p>
 	<?php endif; ?>
 	<div class="clear"></div>
 </fieldset>

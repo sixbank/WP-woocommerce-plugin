@@ -85,7 +85,7 @@ add_action('wp_head', 'wpb_hook_javascript');
 function admin_options() {
     $suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
     $suffix = '';
-    wp_enqueue_script( 'wc-sixbank-admin', plugins_url( 'assets/js/admin/admin' . $suffix . '.js', plugin_dir_path( __FILE__ ) ), array( 'jquery' ), WC_Sixbank::VERSION, true );
+    wp_enqueue_script( 'wc-sixbank-admin', plugins_url( 'assets/js/admin/admin' . $suffix . '.js', plugin_dir_path( __FILE__ ) ), array( 'jquery' ), \sixbank\WC_Sixbank::VERSION, true );
     
 }
 

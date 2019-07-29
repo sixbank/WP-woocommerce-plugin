@@ -1,4 +1,5 @@
 <?php
+namespace sixbank;
 /**
  * Plugin Name: Sixbank WooCommerce
  * Plugin URI:  https://www.sixbank.net/
@@ -48,7 +49,7 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 		/**
 		 * Initialize the plugin public actions.
 		 */
-		private function __construct() {
+		private function __construct() {		
 			// Load plugin text domain.
 			add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
 
@@ -167,7 +168,7 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 
 		function sixbank_order_callback($data){
 			global $wpdb;
-			file_put_contents("/home/homolog/webapps/homolog-gateway/webhook.log", date('Y-m-d H:i - ') . print_r($data, true), FILE_APPEND);
+			
 			$tid = $data['tid'];
 			$status = $data['status'];
 			$recurrences_id = $data['recurrences_id'];
@@ -275,7 +276,7 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 			$order_id = $wpdb->get_var( $sql );
 			$order = wc_get_order( $order_id );
 
-			$gateway = new WC_Sixbank_Credit_Gateway();
+			$gateway = new \sixbank\payment\WC_Sixbank_Credit_Gateway();
 			$response = $gateway->report($order, $tid);
 			$status = $response->getResponse()['status'];
 						
@@ -477,7 +478,7 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 		 * @return  array          Payment methods with Sixbank.
 		 */
 		public function add_gateway( $methods ) {
-			array_push( $methods, 'WC_Sixbank_Debit_Gateway', 'WC_Sixbank_Credit_Gateway', 'WC_Sixbank_Slip_Gateway', 'WC_Sixbank_Transfer_Gateway');
+			array_push( $methods, 'sixbank\payment\WC_Sixbank_Debit_Gateway', 'sixbank\payment\WC_Sixbank_Credit_Gateway', 'sixbank\payment\WC_Sixbank_Slip_Gateway', 'sixbank\payment\WC_Sixbank_Transfer_Gateway');
 
 			return $methods;
 		}
@@ -634,8 +635,9 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 				//Se está na compra, não aplica desconto, valor já está calculado
 				if ($order_id <= 0)
 				$order_total = $order_total* ( ( 100 - get_valid_value($discount) ) / 100 );	
-								
-				if ($order_total < $min_value){										
+							
+				
+				if ($order_total < floatval($min_value)){										
 					unset( $available_gateways[$gateway_id] );
 				}
 			}
@@ -656,6 +658,6 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 		return $value;
 	}
 
-	add_action( 'plugins_loaded', array( 'WC_Sixbank', 'get_instance' ), 0 );
+	add_action( 'plugins_loaded', array( 'sixbank\WC_Sixbank', 'get_instance' ), 0 );
 
 endif;

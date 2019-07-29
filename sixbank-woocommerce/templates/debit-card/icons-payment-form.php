@@ -26,7 +26,7 @@ $first_method = current( $methods );
 	<?php endif; ?>
 	<?php if ( 0 < $discount ) : ?>
 		<p class="form-row form-row-wide">
-			<?php printf( __( 'Payment by debit have discount of %s. Order Total: %s.', 'sixbank-woocommerce' ), $discount . '%', sanitize_text_field( woocommerce_price( $discount_total ) ) ); ?>
+			<?php printf( __( 'Payment by debit have discount of %s. Order Total: %s.', 'sixbank-woocommerce' ), $discount . '%', sanitize_text_field( wc_price( $discount_total ) ) ); ?>
 		</p>
 	<?php endif; ?>
 	<div class="clear"></div>

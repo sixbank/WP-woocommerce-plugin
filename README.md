@@ -9,7 +9,7 @@ Woocommerce 3.6.4
 > 1. No painel admin do Wordpress, acessar o menu Plugins > Adicionar novo
 > 2. Botão Enviar plugin > Escolher arquivo
 > 3. Fazer upload e instalação do arquivo sixbank-woocommerce.zip 
-
+> 4. Executar na pasta do plugin sixbank-woocommerce/includes, composer install
 
 # Configuração dos meios de pagamento
 > Ao instalar o plugin, as opções de pagamento ficarão disponíveis em: WooCommerce > Configurações > Pagamentos.

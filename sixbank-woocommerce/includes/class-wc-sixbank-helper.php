@@ -1,4 +1,7 @@
 <?php
+namespace sixbank\helper;
+use \WC_Payment_Gateway as WC_Payment_Gateway;
+use \WC_Logger as WC_Logger;
 /**
  * WC Sixbank Helper Class.
  */
@@ -122,9 +125,9 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 
 		// Backwards compatibility with WooCommerce version prior to 2.1.
 		if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.1', '>=' ) ) {
-			$url = WC()->api_request_url( get_class( $this ) );
+			$url = WC()->api_request_url( substr(strrchr(get_class( $this ), "\\"), 1 ));
 		} else {
-			$url = $woocommerce->api_request_url( get_class( $this ) );
+			$url = $woocommerce->api_request_url( substr(strrchr(get_class( $this ), "\\"), 1 ));
 		}
 
 		return urlencode( add_query_arg( array( 'key' => $order->get_order_key(), 'order' => $order->get_id() ), $url ) );
@@ -178,7 +181,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 
 		// Gets order total from "pay for order" page.
 		if ( 0 < $order_id ) {
-			$order      = new WC_Order( $order_id );
+			$order      = new \WC_Order( $order_id );
 			$order_total = (float) $order->get_total();
 
 			// Gets order total from cart/checkout.
@@ -279,7 +282,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 	public function admin_options() {
 		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 		$suffix = '';
-		wp_enqueue_script( 'wc-sixbank-admin', plugins_url( 'assets/js/admin/admin' . $suffix . '.js', plugin_dir_path( __FILE__ ) ), array( 'jquery' ), WC_Sixbank::VERSION, true );
+		wp_enqueue_script( 'wc-sixbank-admin', plugins_url( 'assets/js/admin/admin' . $suffix . '.js', plugin_dir_path( __FILE__ ) ), array( 'jquery' ), \sixbank\WC_Sixbank::VERSION, true );
 
 		include dirname( __FILE__ ) . '/views/html-admin-page.php';
 	}
@@ -350,7 +353,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 
 		for ( $i = 1; $i <= $installments; $i++ ) {
 			$credit_total    = $order_total / $i;
-			$credit_interest = sprintf( __( 'no interest. Total: %s', 'sixbank-woocommerce' ), sanitize_text_field( woocommerce_price( $order_total ) ) );
+			$credit_interest = sprintf( __( 'no interest. Total: %s', 'sixbank-woocommerce' ), sanitize_text_field( wc_price( $order_total ) ) );
 			$smallest_value  = ( 5 <= $this->smallest_installment ) ? $this->smallest_installment : 5;
 
 			if ( $i >= $this->interest && 0 < $interest_rate ) {
@@ -359,7 +362,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 
 				if ( $credit_total < $interest_total ) {
 					$credit_total    = $interest_total;
-					$credit_interest = sprintf( __( 'with interest of %s%% a.m. Total: %s', 'sixbank-woocommerce' ), $this->get_valid_value( $this->interest_rate ), sanitize_text_field( woocommerce_price( $interest_order_total ) ) );
+					$credit_interest = sprintf( __( 'with interest of %s%% a.m. Total: %s', 'sixbank-woocommerce' ), $this->get_valid_value( $this->interest_rate ), sanitize_text_field( wc_price( $interest_order_total ) ) );
 				}
 			}
 
@@ -373,11 +376,11 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 
 			if ( 'select' == $type ) {
 				if ($i == 1)
-				$html .= '<option value="' . $i . '" class="' . $at_sight . '">' . sprintf( __( 'at sight. Total: %s', 'sixbank-woocommerce' ), sanitize_text_field( woocommerce_price( $credit_total ) ) ) . '</option>';
+				$html .= '<option value="' . $i . '" class="' . $at_sight . '">' . sprintf( __( 'at sight. Total: %s', 'sixbank-woocommerce' ), sanitize_text_field( wc_price( $credit_total ) ) ) . '</option>';
 				else
-				$html .= '<option value="' . $i . '" class="' . $at_sight . '">' . sprintf( __( '%sx of %s %s', 'sixbank-woocommerce' ), $i, sanitize_text_field( woocommerce_price( $credit_total ) ), $credit_interest ) . '</option>';
+				$html .= '<option value="' . $i . '" class="' . $at_sight . '">' . sprintf( __( '%sx of %s %s', 'sixbank-woocommerce' ), $i, sanitize_text_field( wc_price( $credit_total ) ), $credit_interest ) . '</option>';
 			} else {
-				$html .= '<label class="' . $at_sight . '"><input type="radio" name="sixbank_credit_installments" value="' . $i . '" /> ' . sprintf( __( '%sx of %s %s', 'sixbank-woocommerce' ), $i, '<strong>' . sanitize_text_field( woocommerce_price( $credit_total ) ) . '</strong>', $credit_interest ) . '</label>';
+				$html .= '<label class="' . $at_sight . '"><input type="radio" name="sixbank_credit_installments" value="' . $i . '" /> ' . sprintf( __( '%sx of %s %s', 'sixbank-woocommerce' ), $i, '<strong>' . sanitize_text_field( wc_price( $credit_total ) ) . '</strong>', $credit_interest ) . '</label>';
 			}
 		}
 
@@ -398,7 +401,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 	 */
 	public function get_installment_text( $quantity, $order_total ) {
 		$credit_total    = $order_total / $quantity;
-		$credit_interest = sprintf( __( 'no interest. Total: %s', 'sixbank-woocommerce' ), sanitize_text_field( woocommerce_price( $order_total ) ) );
+		$credit_interest = sprintf( __( 'no interest. Total: %s', 'sixbank-woocommerce' ), sanitize_text_field( wc_price( $order_total ) ) );
 		$interest_rate   = $this->get_valid_value( $this->interest_rate ) / 100;
 
 		if ( $quantity >= $this->interest && 0 < $interest_rate ) {
@@ -407,11 +410,11 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 
 			if ( $credit_total < $interest_total ) {
 				$credit_total    = $interest_total;
-				$credit_interest = sprintf( __( 'with interest of %s%% a.m. Total: %s', 'sixbank-woocommerce' ), $this->get_valid_value( $this->interest_rate ), sanitize_text_field( woocommerce_price( $interest_order_total ) ) );
+				$credit_interest = sprintf( __( 'with interest of %s%% a.m. Total: %s', 'sixbank-woocommerce' ), $this->get_valid_value( $this->interest_rate ), sanitize_text_field( wc_price( $interest_order_total ) ) );
 			}
 		}
 
-		return sprintf( __( '%sx of %s %s', 'sixbank-woocommerce' ), $quantity, sanitize_text_field( woocommerce_price( $credit_total ) ), $credit_interest );
+		return sprintf( __( '%sx of %s %s', 'sixbank-woocommerce' ), $quantity, sanitize_text_field( wc_price( $credit_total ) ), $credit_interest );
 	}
 
 	/**
@@ -694,7 +697,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 	 * @return array           Redirect.
 	 */
 	public function process_payment( $order_id ) {
-		$order = new WC_Order( $order_id );
+		$order = new \WC_Order( $order_id );
 
 		$order_email = $order->get_billing_email();
 		$user = email_exists( $order_email );  
@@ -790,7 +793,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 			header( 'HTTP/1.1 200 OK' );
 
 			$order_id = absint( $_GET['order'] );
-			$order    = new WC_Order( $order_id );
+			$order    = new \WC_Order( $order_id );
 
 			if ( $order->order_key == $_GET['key'] ) {
 				do_action( 'woocommerce_' . $this->id . '_return', $order );
@@ -884,7 +887,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 	 * @return bool|WP_Error True or false based on success, or a WP_Error object.
 	 */
 	public function process_refund( $order_id, $amount = null, $reason = '' ) {
-		$order = new WC_Order( $order_id );
+		$order = new \WC_Order( $order_id );
 
 		$tid = get_post_meta( $order_id, '_sixbank_tid', true );
 		if ( ! $order || ! $tid ) {
@@ -907,9 +910,9 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 				$response = $this->api->do_transaction_cancellation( $order, $tid, $order->get_id(), $amount );
 
 				$response = $response->getResponse();			
-				
-				$this->log->add( $this->id, 'Cancelamento: ' . print_r($response, true) );
-				
+				if ( 'yes' == $this->debug ) {
+					$this->log->add( $this->id, 'Cancelamento: ' . print_r($response, true) );
+				}
 				// Already canceled.
 				if ( ! empty( $response['errorCode'] ) ) {
 					$order->add_order_note( __( 'Sixbank', 'sixbank-woocommerce' ) . ': ' . sanitize_text_field( $response['message'] ) );
@@ -942,7 +945,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 	public function thankyou_page( $order_id ) {
 		global $woocommerce;
 
-		$order = new WC_Order( $order_id );
+		$order = new \WC_Order( $order_id );
 		if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.1', '>=' ) ) {
 			$order_url = $order->get_view_order_url();
 		} else {
@@ -950,7 +953,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 		}
 
 		if ( $order->status == 'processing' || $order->status == 'completed' ) {
-			echo '<div class="woocommerce-message"><a href="' . esc_url( $order_url ) . '" class="button" style="display: block !important; visibility: visible !important;">' . __( 'View order details', 'sixbank-woocommerce' ) . '</a>' . sprintf( __( 'Your payment has been received successfully.', 'sixbank-woocommerce' ), woocommerce_price( $order->order_total ) ) . '<br />' . __( 'The authorization code was generated.', 'sixbank-woocommerce' ) . '</div>';
+			echo '<div class="woocommerce-message"><a href="' . esc_url( $order_url ) . '" class="button" style="display: block !important; visibility: visible !important;">' . __( 'View order details', 'sixbank-woocommerce' ) . '</a>' . sprintf( __( 'Your payment has been received successfully.', 'sixbank-woocommerce' ), wc_price( $order->order_total ) ) . '<br />' . __( 'The authorization code was generated.', 'sixbank-woocommerce' ) . '</div>';
 		} else if ($order->get_payment_method() == 'sixbank_slip'){		
 			$html = '<div class="woocommerce-info">';
 			$html .= sprintf( '<a class="button" href="%s" target="_blank">%s</a>', get_post_meta( $order->get_id(), '_slip_url', true ), __( 'Imprimir boleto', 'boletosimples-woocommerce' ) );

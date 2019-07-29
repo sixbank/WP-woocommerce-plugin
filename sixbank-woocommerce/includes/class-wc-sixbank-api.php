@@ -1,10 +1,19 @@
 <?php
-
-foreach (glob(plugin_dir_path( __FILE__ ) . "/gateway/API/*.php") as $filename)
+namespace sixbank\api;
+/*foreach (glob(plugin_dir_path( __FILE__ ) . "/gateway/API/*.php") as $filename)
 {	
 	//echo $filename . "<BR>";
     require_once $filename;
-}
+}*/
+require (plugin_dir_path(__FILE__) . 'vendor/autoload.php');
+
+use \Gateway\API\Credential as Credential;
+use \Gateway\API\Environment as Environment;
+use \Gateway\API\Gateway as Gateway;
+use \Gateway\API\Transaction as Transaction;
+use \Gateway\API\Currency as Currency;
+use \Gateway\API\Methods as Methods;
+
 /**
  * WC Sixbank API Class.
  */
@@ -493,9 +502,6 @@ class WC_Sixbank_API {
 
 			}else{
 				
-				if ( 'yes' == $this->gateway->debug ) {
-					$this->gateway->log->add( $this->gateway->id, "log credit $payment_type - total: $order_total | " .  $this->gateway->installment_type . " installments $installments - " . $this->gateway->interest);
-				}
 				$transaction->Order()
 				->setReference($order->get_order_number())
 				->setTotalAmount((int) $order_total);
@@ -607,22 +613,25 @@ class WC_Sixbank_API {
 
 		$order->add_order_note( "Criando transação" );
 		if ( 'yes' == $this->gateway->debug ) {
-			$this->gateway->log->add( $this->gateway->id, $payment_type . ' - Transaction: ' . print_r( $transaction, true ) );
-			$this->gateway->log->add( $this->gateway->id, $this->gateway->get_api_return_url( $order ) );
+			$this->gateway->log->add( $this->gateway->id, $payment_type . ' - Transaction: ' . print_r( $this->remove_card_log($transaction), true ) );			
 		}
 
 		// Set URL RETURN
 		//if ( $payment_type == 1 ) { // DEBITO
-			$transaction->setUrlReturn( get_site_url() . "/wp-json/sixbank/v1/sixbank_order_return");
+			$transaction->setUrlReturn( get_rest_url(null, 'sixbank/v1/sixbank_order_return') );
 		//}
 		// PROCESS - ACTION
 		if ($this->gateway->capture == 'yes'){
 
-			$this->gateway->log->add( $this->gateway->id, 'method sale - ' . print_r( $transaction, true) );
+			if ( 'yes' == $this->gateway->debug ) {
+				$this->gateway->log->add( $this->gateway->id, 'capture - ' . print_r( $this->remove_card_log($transaction), true) );
+			}
 			$response = $gateway->Sale($transaction);
 			update_post_meta($order->get_id(), '_payment_captured', true);			
 		}else{
-			$this->gateway->log->add( $this->gateway->id, 'method authorize - ' . print_r( $transaction, true) );
+			if ( 'yes' == $this->gateway->debug ) {
+				$this->gateway->log->add( $this->gateway->id, 'not capture - ' . print_r( $this->remove_card_log($transaction), true) );
+			}
 			$response = $gateway->Authorize($transaction);
 			update_post_meta($order->get_id(), '_payment_captured', false);
 			$order->update_status( 'authorized' );
@@ -636,10 +645,14 @@ class WC_Sixbank_API {
 		// RESULTED
 		if ($response->isAuthorized()) { // Action Authorized
 			$order->add_order_note( "Transação autorizada" );
-			$this->gateway->log->add( $this->gateway->id, 'Authorized. ' . $response->getStatus() );
+			if ( 'yes' == $this->gateway->debug ) {
+				$this->gateway->log->add( $this->gateway->id, 'Authorized. ' . $response->getStatus() );
+			}
 		} else { // Action Unauthorized	
 			$order->add_order_note( "Transação não autorizada. Status: " . $response->getStatus() );			
-			$this->gateway->log->add( $this->gateway->id, 'Not authorized. ' . $response->getStatus() );
+			if ( 'yes' == $this->gateway->debug ) {
+				$this->gateway->log->add( $this->gateway->id, 'Not authorized. ' . $response->getStatus() );
+			}
 		}
 
 		// CAPTURE
@@ -740,7 +753,7 @@ class WC_Sixbank_API {
 		}
 
 		// Set URL RETURN
-		$transaction->setUrlReturn( get_site_url() . "/wp-json/sixbank/v1/sixbank_order_return");
+		$transaction->setUrlReturn( get_rest_url(null, 'sixbank/v1/sixbank_order_return') );
 
 		// PROCESS - ACTION
 		#$response = $gateway->sale($transaction);
@@ -758,10 +771,14 @@ class WC_Sixbank_API {
 		// RESULTED
 		if ($response->isAuthorized()) { // Action Authorized
 			$order->add_order_note( "Transação autorizada" );
-			$this->gateway->log->add( $this->gateway->id, 'Authorized. ' . $response->getStatus() );
+			if ( 'yes' == $this->gateway->debug ) {
+				$this->gateway->log->add( $this->gateway->id, 'Authorized. ' . $response->getStatus() );
+			}
 		} else { // Action Unauthorized	
-			$order->add_order_note( "Transação não autorizada. Status: " . $response->getStatus() );			
-			$this->gateway->log->add( $this->gateway->id, 'Not authorized. ' . $response->getStatus() );
+			$order->add_order_note( "Transação não autorizada. Status: " . $response->getStatus() );
+			if ( 'yes' == $this->gateway->debug ) {			
+				$this->gateway->log->add( $this->gateway->id, 'Not authorized. ' . $response->getStatus() );
+			}
 		}
 
 		// CAPTURE
@@ -825,7 +842,7 @@ class WC_Sixbank_API {
 			->setCountry("BR");
 		
 		// Set URL RETURN
-		$transaction->setUrlReturn( get_site_url() . "/wp-json/sixbank/v1/sixbank_order_return");
+		$transaction->setUrlReturn( get_rest_url(null, 'sixbank/v1/sixbank_order_return') );
 
 		$order->add_order_note( "Criando transação" );
 
@@ -893,7 +910,8 @@ class WC_Sixbank_API {
 			->setCountry("BR");
 		
 		// Set URL RETURN
-		$transaction->setUrlReturn( get_site_url() . "/wp-json/sixbank/v1/sixbank_order_return");
+		
+		$transaction->setUrlReturn( get_rest_url(null, 'sixbank/v1/sixbank_order_return') );
 
 		$order->add_order_note( "Criando transação" );
 
@@ -911,10 +929,14 @@ class WC_Sixbank_API {
 		// RESULTED
 		if ($response->isAuthorized()) { // Action Authorized
 			$order->add_order_note( "Transação autorizada" );
-			$this->gateway->log->add( $this->gateway->id, 'Authorized. ' . $response->getStatus() );
+			if ( 'yes' == $this->gateway->debug ) {
+				$this->gateway->log->add( $this->gateway->id, 'Authorized. ' . $response->getStatus() );
+			}
 		} else { // Action Unauthorized				
-			$order->add_order_note( "Transação não autorizada. Status: " . $response->getStatus() );			
-			$this->gateway->log->add( $this->gateway->id, 'Not authorized. ' . $response->getStatus() );
+			$order->add_order_note( "Transação não autorizada. Status: " . $response->getStatus() );	
+			if ( 'yes' == $this->gateway->debug ) {		
+				$this->gateway->log->add( $this->gateway->id, 'Not authorized. ' . $response->getStatus() );
+			}
 		}		
 		
 		if ( 'yes' == $this->gateway->debug ) {
@@ -982,5 +1004,11 @@ class WC_Sixbank_API {
 		
 		
 		return $response_data;
+	}
+
+	public function remove_card_log( $transaction ){
+		$log = print_r($transaction, true);		
+		$log = preg_replace('/(?:[0-9]{15,16})+/s', '**** **** **** ***', $log);		
+		return $log;
 	}
 }
