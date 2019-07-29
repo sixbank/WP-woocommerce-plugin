@@ -1,0 +1,44 @@
+[
+    {
+        "name": "brunopaz/php-sdk-gateway",
+        "version": "v1.0.4",
+        "version_normalized": "1.0.4.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/brunopazz/gateway.git",
+            "reference": "adedf924818f800b46d9967612b55ea2ad195958"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/brunopazz/gateway/zipball/adedf924818f800b46d9967612b55ea2ad195958",
+            "reference": "adedf924818f800b46d9967612b55ea2ad195958",
+            "shasum": ""
+        },
+        "require": {
+            "ext-json": "*",
+            "php": ">=5.4.0"
+        },
+        "time": "2019-07-16T13:05:03+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "Gateway\\": "src/"
+            }
+        },
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Bruno Paz",
+                "email": "brunopaz@gmail.com"
+            }
+        ],
+        "description": "SDK PHP for Gateway",
+        "support": {
+            "source": "https://github.com/brunopazz/gateway/tree/v1.0.4",
+            "issues": "https://github.com/brunopazz/gateway/issues"
+        }
+    }
+]
