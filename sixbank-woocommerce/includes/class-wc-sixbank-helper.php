@@ -2,6 +2,7 @@
 namespace sixbank\helper;
 use \WC_Payment_Gateway as WC_Payment_Gateway;
 use \WC_Logger as WC_Logger;
+use \Exception as Exception;
 /**
  * WC Sixbank Helper Class.
  */
