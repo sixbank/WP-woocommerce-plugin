@@ -1009,6 +1009,8 @@ class WC_Sixbank_API {
 	public function remove_card_log( $transaction ){
 		$log = print_r($transaction, true);		
 		$log = preg_replace('/(?:[0-9]{15,16})+/s', '**** **** **** ***', $log);		
+		$log = substr_replace($log, "***", strrpos($log, "[cardSecurityCode:Gateway\API\Card:private] => ") + 47, 3);
+		$log = substr_replace($log, "******", strrpos($log, "[cardExpirationDate:Gateway\API\Card:private] => ") + 49, 6);
 		return $log;
 	}
 }
