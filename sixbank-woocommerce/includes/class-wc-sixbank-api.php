@@ -13,6 +13,7 @@ use \Gateway\API\Gateway as Gateway;
 use \Gateway\API\Transaction as Transaction;
 use \Gateway\API\Currency as Currency;
 use \Gateway\API\Methods as Methods;
+use \Gateway\API\Rebill as Rebill;
 
 /**
  * WC Sixbank API Class.
