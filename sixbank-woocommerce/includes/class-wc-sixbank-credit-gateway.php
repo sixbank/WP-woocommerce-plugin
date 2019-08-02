@@ -50,7 +50,16 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 		$this->interest             = $this->get_option( 'interest' );		
 		$this->design               = $this->get_option( 'design' );
 		$this->debug                = $this->get_option( 'debug' );
-		$this->min_value  		= $this->get_option( 'min_value' );
+		$this->min_value  			= $this->get_option( 'min_value' );
+		$this->validate_rg_cpf  	= $this->get_option( 'validate_rg_cpf' );
+		$this->validate_valid_cpf 	= $this->get_option( 'validate_valid_cpf' );
+		$this->validate_valid_cpf = $this->get_option( 'validate_valid_cpf' );
+		$this->validate_name_holder = $this->get_option( 'validate_name_holder' );
+		$this->validate_card_date = $this->get_option( 'validate_card_date' );
+		$this->validate_cvv = $this->get_option( 'validate_cvv' );
+		$this->validate_expired_date = $this->get_option( 'validate_expired_date' );
+		$this->validate_recurrent_product = $this->get_option( 'validate_recurrent_product' );
+		
 
 		// Active logs.
 		if ( 'yes' == $this->debug ) {
@@ -266,6 +275,48 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 				'default'     => 'no',
 				'description' => sprintf( __( 'Log Sixbank events, such as API requests, inside %s', 'sixbank-woocommerce' ), $this->get_log_file_path() ),
 			),
+			'validate_rg_cpf' => array(
+				'title'       => __( 'Validação CPF', 'sixbank-woocommerce' ),
+				'type'        => 'text',				
+				'desc_tip'    => true,
+				'default'     => 'Por favor, digite seu RG ou CPF.',
+			),
+			'validate_valid_cpf' => array(
+				'title'       => __( 'Validação CPF digitado', 'sixbank-woocommerce' ),
+				'type'        => 'text',				
+				'desc_tip'    => true,
+				'default'     => 'Por favor, digite um CPF válido.',
+			),
+			'validate_name_holder' => array(
+				'title'       => __( 'Validação titular do cartão', 'sixbank-woocommerce' ),
+				'type'        => 'text',				
+				'desc_tip'    => true,
+				'default'     => 'Por favor, digite o nome do titular do cartão.',
+			),
+			'validate_card_date' => array(
+				'title'       => __( 'Validação data de validade', 'sixbank-woocommerce' ),
+				'type'        => 'text',				
+				'desc_tip'    => true,
+				'default'     => 'Por favor, digite a data de validade do cartão.',
+			),
+			'validate_cvv' => array(
+				'title'       => __( 'Validação do CVV', 'sixbank-woocommerce' ),
+				'type'        => 'text',				
+				'desc_tip'    => true,
+				'default'     => 'Por favor, digite o cvv do cartão.',
+			),
+			'validate_expired_date' => array(
+				'title'       => __( 'Validação da data de validade', 'sixbank-woocommerce' ),
+				'type'        => 'text',				
+				'desc_tip'    => true,
+				'default'     => 'A data de validade do cartão expirou.',
+			),
+			'validate_recurrent_product' => array(
+				'title'       => __( 'Validação carrinho produto recorrente', 'sixbank-woocommerce' ),
+				'type'        => 'text',				
+				'desc_tip'    => true,
+				'default'     => 'Seu carrinho possui produto de outro tipo, é possível apenas um tipo de produto / um produto recorrente',
+			),
 		);
 	}
 
@@ -395,22 +446,16 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 		$payment_url = '';
 		$card_number = isset( $_POST['sixbank_credit_number'] ) ? sanitize_text_field( $_POST['sixbank_credit_number'] ) : '';
 		$card_brand  = $this->api->get_card_brand( $card_number );
+	
+		$valid = $this->validate_card_fields( $_POST, $this->validate_name_holder, $this->validate_card_date, $this->validate_cvv );
 		
-		// Validate credit card brand.
-		$valid = $this->validate_credit_brand( $card_brand );
-
-		// Test the card fields.
-		if ( $valid ) {
-			$valid = $this->validate_card_fields( $_POST );
-		}
-
 		if ( $valid ){
-			$valid = $this->validate_expiration_date( $_POST );
+			$valid = $this->validate_expiration_date( $_POST,  $this->validate_expired_date );
 		}
 		
 		if ($this->antifraud == 'yes' && $valid){
 			//Valida CPF e RG
-			$valid = $this->validate_slip_fields( $_POST );
+			$valid = $this->validate_slip_fields( $_POST, $this->validate_rg_cpf, $this->validate_valid_cpf );
 		}
 
 		$cpf = get_post_meta($order->get_id(), '_billing_cpf', true);
@@ -422,7 +467,7 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 			$_POST['billing_rg'] = $rg;
 		}
 		if ($valid){
-			$valid = $this->validate_cpf_fields( $_POST );
+			$valid = $this->validate_cpf_fields( $_POST, $this->validate_valid_cpf );
 		}
 
 		// Test the installments.
@@ -505,11 +550,9 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 			$card_brand   = get_post_meta( $order->get_id(), '_WC_Sixbank_card_brand', true );
 			$card_brand   = $this->get_payment_method_name( $card_brand );
 			$installments = get_post_meta( $order->get_id(), '_WC_Sixbank_installments', true );
-
-			$items['payment_method']['value'] .= '<br />';
-			$items['payment_method']['value'] .= '<small>';
+			
 			$items['payment_method']['value'] .= sprintf( __( '%s in %s.', 'sixbank-woocommerce' ), esc_attr( $card_brand ), $this->get_installment_text( $installments, (float) $order->get_total() ) );
-			$items['payment_method']['value'] .= '</small>';
+			
 		}
 
 		return $items;

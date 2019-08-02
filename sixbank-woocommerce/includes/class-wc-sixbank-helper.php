@@ -371,8 +371,6 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 				continue;
 			}
 
-			file_put_contents("D:\\xampp7\\htdocs\\minhabolsa\\payment_gateway.log", date('Y-m-d H:i - ') . " - parcela - $credit_interest /" . print_r($credit_total, true) . PHP_EOL, FILE_APPEND);
-
 			$at_sight = ( 1 == $i ) ? 'sixbank-at-sight' : '';
 
 			if ( 'select' == $type ) {
@@ -448,25 +446,25 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 		} else {
 			$order_total = $this->get_order_total();
 		}
-		file_put_contents("D:\\xampp7\\htdocs\\minhabolsa\\payment_gateway.log", date('Y-m-d H:i - ') . print_r($order_total, true) . PHP_EOL, FILE_APPEND);
+		
 		$this->get_checkout_form( $model, $order_total );
 	}
 	
 
-	protected function validate_rg_cpf_fields( $posted ){
+	protected function validate_rg_cpf_fields( $posted, $validate_rg, $validate_cpf, $validate_valid_cpf ){
 		try {
 			// Validate name typed for the card.
 			
 			if ( ! isset( $posted[ 'billing_rg'] ) || '' === $posted[ 'billing_rg' ] ) {
-				throw new Exception( __( 'Please type the rg', 'sixbank-woocommerce' ) );
+				throw new Exception( $validate_rg );
 			}
 
 			if ( ! isset( $posted[ 'billing_cpf'] ) || '' === $posted[ 'billing_cpf' ] ) {
-				throw new Exception( __( 'Please type the cpf.', 'sixbank-woocommerce' ) );
+				throw new Exception( $validate_cpf );
 			}			
 			
 			if ( isset( $posted[ 'billing_cpf'] ) && '' !== $posted[ 'billing_cpf' ] && !$this->validaCPF($posted[ 'billing_cpf'] )){
-				throw new Exception( __( 'Please type a valid cpf.', 'sixbank-woocommerce' ) );
+				throw new Exception( $validate_valid_cpf );
 			}
 		
 		} catch ( Exception $e ) {
@@ -478,7 +476,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 		return true;
 	}
 
-	protected function validate_slip_fields( $posted ){
+	protected function validate_slip_fields( $posted, $validate_rg_cpf, $validate_valid_cpf ){
 		try {
 			// Validate name typed for the card.
 			$count = 0;
@@ -491,11 +489,11 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 			}
 			
 			if ($count >= 2){
-				throw new Exception( __( 'Please type the rg or cpf. ', 'sixbank-woocommerce' ) );
+				throw new Exception( $validate_rg_cpf );
 			}
 
 			if ( isset( $posted[ 'billing_cpf'] ) && '' !== $posted[ 'billing_cpf' ] && !$this->validaCPF($posted[ 'billing_cpf'] )){
-				throw new Exception( __( 'Please type a valid cpf.', 'sixbank-woocommerce' ) );
+				throw new Exception( $validate_valid_cpf );
 			}
 		
 		} catch ( Exception $e ) {
@@ -507,12 +505,12 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 		return true;
 	}
 
-	protected function validate_cpf_fields( $posted ){
+	protected function validate_cpf_fields( $posted, $validate_valid_cpf ){
 		try {
 			// Validate name typed for the card.
 
 			if ( isset( $posted[ 'billing_cpf'] ) && '' !== $posted[ 'billing_cpf' ] && !$this->validaCPF($posted[ 'billing_cpf'] )){
-				throw new Exception( __( 'Please type a valid cpf.', 'sixbank-woocommerce' ) );
+				throw new Exception( $validate_valid_cpf );
 			}
 		
 		} catch ( Exception $e ) {
@@ -581,21 +579,21 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 	 *
 	 * @return bool
 	 */
-	protected function validate_card_fields( $posted ) {
+	protected function validate_card_fields( $posted, $validate_name_holder, $validate_card_date, $validate_cvv ) {
 		try {
 			// Validate name typed for the card.
 			if ( ! isset( $posted[ $this->id . '_holder_name' ] ) || '' === $posted[ $this->id . '_holder_name' ] ) {
-				throw new Exception( __( 'Please type the name of the card holder.', 'sixbank-woocommerce' ) );
+				throw new Exception( $validate_name_holder );
 			}
 
 			// Validate the expiration date.
 			if ( ! isset( $posted[ $this->id . '_expiry' ] ) || '' === $posted[ $this->id . '_expiry' ] ) {
-				throw new Exception( __( 'Please type the card expiry date.', 'sixbank-woocommerce' ) );
+				throw new Exception( $validate_card_date );
 			}
 
 			// Validate the cvv for the card.
 			if ( ! isset( $posted[ $this->id . '_cvv' ] ) || '' === $posted[ $this->id . '_cvv' ] ) {
-				throw new Exception( __( 'Please type the cvv code for the card', 'sixbank-woocommerce' ) );
+				throw new Exception( $validate_cvv );
 			}
 		} catch ( Exception $e ) {
 			$this->add_error( $e->getMessage() );
@@ -606,7 +604,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 		return true;
 	}	
 
-	protected function validate_expiration_date( $posted ) {
+	protected function validate_expiration_date( $posted, $validate_expired_date ) {
 		try {	
 			$expiration_date = $posted[ $this->id . '_expiry' ];
 			$expiry_date = explode( '/', sanitize_text_field( $expiration_date ) );
@@ -618,7 +616,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 			$now     = new \DateTime();
 			
 			if ($expires < $now) {
-				throw new Exception( __( 'Invalid date (expirated)', 'sixbank-woocommerce' ) );
+				throw new Exception( $validate_expired_date );
 			}		
 		} catch ( Exception $e ) {
 			$this->add_error( $e->getMessage() );
@@ -955,12 +953,11 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 
 		if ( $order->status == 'processing' || $order->status == 'completed' ) {
 			echo '<div class="woocommerce-message"><a href="' . esc_url( $order_url ) . '" class="button" style="display: block !important; visibility: visible !important;">' . __( 'View order details', 'sixbank-woocommerce' ) . '</a>' . sprintf( __( 'Your payment has been received successfully.', 'sixbank-woocommerce' ), wc_price( $order->order_total ) ) . '<br />' . __( 'The authorization code was generated.', 'sixbank-woocommerce' ) . '</div>';
-		} else if ($order->get_payment_method() == 'sixbank_slip'){		
+		} else if ($order->status == 'on-hold' && $order->get_payment_method() == 'sixbank_slip'){		
 			$html = '<div class="woocommerce-info">';
 			$html .= sprintf( '<a class="button" href="%s" target="_blank">%s</a>', get_post_meta( $order->get_id(), '_slip_url', true ), __( 'Imprimir boleto', 'boletosimples-woocommerce' ) );
-			$message = sprintf( __( '%sAtenção!%s Não encontramos pagamento para está compra.', 'boletosimples-woocommerce' ), '<strong>', '</strong>' ) . '<br />';
-			$message .= __( 'Por favor, clique no botão abaixo e pague o boleto.', 'boletosimples-woocommerce' ) . '<br />';			
-			$message .= __( 'Ignore esta mensagem se o pagamento já foi feito.', 'boletosimples-woocommerce' ) . '<br />';
+			$gateway = wc_get_payment_gateway_by_order($order);
+			$message = property_exists( $gateway , 'slip_text' ) ? $gateway->slip_text : '';
 			$html .= apply_filters( 'woocommerce_boletosimples_pending_payment_instructions', $message, $order );
 			$html .= '</div>';
 			echo $html;		

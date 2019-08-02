@@ -63,8 +63,10 @@ function validate_all_cart_contents(){
         }
     }   
         
+    $payment_gateway = WC()->payment_gateways->payment_gateways()['sixbank_credit'];
+    $message = property_exists( $payment_gateway , 'validate_recurrent_product' ) ? $payment_gateway->validate_recurrent_product : '';
     if($count > 0 && $othertype)  {
-        wc_add_notice( __('Seu carrinho possui produto de outro tipo, é possível apenas um tipo de produto / um produto recorrente', 'sixbank-woocommerce'), 'error' );
+        wc_add_notice( $message, 'error' );
         return false;
     }else{
         return true;
@@ -168,8 +170,11 @@ function is_product_the_same_type($valid, $product_id, $quantity) {
         $_is_sub = true;            
     }
         
+    $payment_gateway = WC()->payment_gateways->payment_gateways()['sixbank_credit'];
+    $message = property_exists( $payment_gateway , 'validate_recurrent_product' ) ? $payment_gateway->validate_recurrent_product : '';
+
     if($othertype && $_is_sub || $count > 0)  {
-        wc_add_notice( __('Seu carrinho possui produto de outro tipo, é possível apenas um tipo de produto / um produto recorrente', 'sixbank-woocommerce'), 'error' );
+        wc_add_notice( $message, 'error' );
         return false;
     }else{
         return $valid;

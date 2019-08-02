@@ -46,7 +46,14 @@ class WC_Sixbank_Slip_Gateway extends WC_Sixbank_Helper {
 		$this->instructions  	= $this->get_option( 'instructions' );
 		$this->min_value  		= $this->get_option( 'min_value' );
 		$this->slip_expire  	= $this->get_option( 'slip_expire' );
+		$this->slip_text  		= $this->get_option( 'slip_text' );
+		$this->validate_cpf  	= $this->get_option( 'validate_cpf' );
+		$this->validate_rg  	= $this->get_option( 'validate_rg' );
+		$this->validate_valid_cpf = $this->get_option( 'validate_valid_cpf' );
 
+		
+		
+		
 		// Active logs.
 		if ( 'yes' == $this->debug ) {
 			$this->log = $this->get_logger();
@@ -195,6 +202,32 @@ class WC_Sixbank_Slip_Gateway extends WC_Sixbank_Helper {
 				'default'     => 'no',
 				'description' => sprintf( __( 'Log Sixbank events, such as API requests, inside %s', 'sixbank-woocommerce' ), $this->get_log_file_path() ),
 			),
+			'slip_text' => array(
+				'title'       => __( 'Texto boleto', 'sixbank-woocommerce' ),
+				'type'        => 'textarea',
+				'description' => 'Texto que é exibido após escolher boleto como opção de pagamento.',
+				'desc_tip'    => true,
+				'default'     => 'Atenção! Seu pedido foi realizado com sucesso porém, seu pagamento ainda precisa ser confirmado.
+				Por favor, clique no botão para visualizar e pagar o boleto.',
+			),
+			'validate_cpf' => array(
+				'title'       => __( 'Validação CPF', 'sixbank-woocommerce' ),
+				'type'        => 'text',				
+				'desc_tip'    => true,
+				'default'     => 'Por favor, digite seu CPF.',
+			),
+			'validate_rg' => array(
+				'title'       => __( 'Validação RG', 'sixbank-woocommerce' ),
+				'type'        => 'text',				
+				'desc_tip'    => true,
+				'default'     => 'Por favor, digite seu RG.',
+			),
+			'validate_valid_cpf' => array(
+				'title'       => __( 'Validação CPF digitado', 'sixbank-woocommerce' ),
+				'type'        => 'text',				
+				'desc_tip'    => true,
+				'default'     => 'Por favor, digite um CPF válido.',
+			)
 		);
 	}
 
@@ -253,7 +286,7 @@ class WC_Sixbank_Slip_Gateway extends WC_Sixbank_Helper {
 		if (isset($rg) && !empty($rg) && (!isset( $_POST[ 'billing_rg'] ) || '' === $_POST[ 'billing_rg' ])){
 			$_POST['billing_rg'] = $rg;
 		}
-		$valid = $this->validate_rg_cpf_fields( $_POST );
+		$valid = $this->validate_rg_cpf_fields( $_POST, $this->validate_rg, $this->validate_cpf, $this->validate_valid_cpf );
 
 		if ( $valid ) {			
 
@@ -381,9 +414,7 @@ class WC_Sixbank_Slip_Gateway extends WC_Sixbank_Helper {
 		if ( $this->id === $order->payment_method ) {
 			$card_brand   = get_post_meta( $order->get_id(), '_WC_Sixbank_card_brand', true );
 			$card_brand   = $this->get_payment_method_name( $card_brand );
-
-			$items['payment_method']['value'] .= '<br />';
-			$items['payment_method']['value'] .= '<small>';
+			
 			$items['payment_method']['value'] .= esc_attr( $card_brand );
 
 			if ( 0 < $this->slip_discount ) {
@@ -392,8 +423,7 @@ class WC_Sixbank_Slip_Gateway extends WC_Sixbank_Helper {
 				$items['payment_method']['value'] .= ' ';
 				$items['payment_method']['value'] .= sprintf( __( 'with discount of %s. Order Total: %s.', 'sixbank-woocommerce' ), $this->slip_discount . '%', sanitize_text_field( wc_price( $discount_total ) ) );
 			}
-
-			$items['payment_method']['value'] .= '</small>';
+			
 		}
 
 		return $items;
