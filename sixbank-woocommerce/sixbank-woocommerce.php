@@ -52,7 +52,8 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 		private function __construct() {		
 			// Load plugin text domain.
 			add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
-
+			add_action( 'admin_init', array($this, 'child_plugin_has_parent_plugin' ));
+						
 			// Checks with WooCommerce and WooCommerce is installed.
 			if ( class_exists( 'WC_Payment_Gateway' ) ) {
 				$this->upgrade();
@@ -68,7 +69,7 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 				}
 				
 				add_action( 'template_redirect', array($this, 'set_custom_data_wc_session' ));
-				add_filter('woocommerce_billing_fields', array($this, 'custom_woocommerce_billing_fields'));
+				//add_filter('woocommerce_billing_fields', array($this, 'custom_woocommerce_billing_fields'));
 				add_action('woocommerce_order_item_add_action_buttons', array($this, 'action_woocommerce_order_item_add_action_buttons'), 10, 1);
 				add_action('save_post', array($this, 'capture_save_action'), 10, 3);
 				add_action( 'rest_api_init', function () {
@@ -94,6 +95,19 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 				add_filter( 'wc_order_statuses', array($this,'add_authorized_to_order_statuses' ) );
 			} else {
 				add_action( 'admin_notices', array( $this, 'woocommerce_missing_notice' ) );
+			}
+
+		}
+
+		function child_plugin_has_parent_plugin() {
+			if ( is_admin() && current_user_can( 'activate_plugins' ) &&  !is_plugin_active( 'woocommerce-extra-checkout-fields-for-brazil/woocommerce-extra-checkout-fields-for-brazil.php' ) ) {
+				include_once dirname( __FILE__ ) . '/includes/views/notices/html-notice-extra-fields-missing.php';
+		
+				deactivate_plugins( plugin_basename( __FILE__ ) ); 
+		
+				if ( isset( $_GET['activate'] ) ) {
+					unset( $_GET['activate'] );
+				}
 			}
 		}
 		
@@ -383,13 +397,13 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 		}
 
 		function set_custom_data_wc_session () {
-			if ( isset( $_POST['billing_rg'] ) || isset( $_POST['billing_cpf'] ) ) {
+			/*if ( isset( $_POST['billing_rg'] ) || isset( $_POST['billing_cpf'] ) ) {
 				$billing_rg   = isset( $_POST['billing_rg'] )  ? esc_attr( $_POST['billing_rg'] )   : '';
 				$billing_cpf = isset( $_POST['billing_cpf'] ) ? esc_attr( $_POST['billing_cpf'] ) : '';
 		
 				// Set the session data
 				WC()->session->set( 'custom_data', array( 'billing_rg' => $billing_rg, 'billing_cpf' => $billing_cpf ) );
-			}
+			}*/
 		}
 
 		function custom_woocommerce_billing_fields($fields)

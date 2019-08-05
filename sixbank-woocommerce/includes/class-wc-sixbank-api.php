@@ -413,10 +413,10 @@ class WC_Sixbank_API {
 		$billing_rg = $order->get_meta( '_billing_rg' );
 		$billing_cpf = $order->get_meta( '_billing_cpf' );
 
-		if ( isset( $billing_rg ) || isset( $billing_cpf) ) {			
+		/*if ( isset( $billing_rg ) || isset( $billing_cpf) ) {			
 			// Set the session data
 			WC()->session->set( 'custom_data', array( 'billing_rg' => $billing_rg, 'billing_cpf' => $billing_cpf ) );
-		}
+		}*/
 
 		// Set the order total with interest.
 		if ( $installments >= $this->gateway->interest && isset($this->gateway->interest)  ) {
@@ -531,6 +531,7 @@ class WC_Sixbank_API {
 		$billing_name = $order->get_billing_first_name() . " " . $order->get_billing_last_name();
 		$billing_rg = $order->get_meta( '_billing_rg' );
 		$billing_cpf = $order->get_meta( '_billing_cpf' );
+		$billing_cnpj = $order->get_meta( '_billing_cnpj' );
 		
 		$acquirer = $this->gateway->get_acquirer();
 		$method = Methods::CREDIT_CARD_INTEREST_BY_ISSUER;
@@ -574,17 +575,32 @@ class WC_Sixbank_API {
 		}
 		
 		// SET CUSTOMER
-		$transaction->Customer()
-			->setCustomerIdentity(strval($user_id))
-			->setName($billing_name)	
-			->setCpf($billing_cpf)			
-			->setEmail($order->get_billing_email())
-			->setAddress($order->get_billing_address_1())
-			->setAddress2($order->get_billing_address_2())			
-			->setPostalCode(preg_replace('/[^0-9]/', '', $order->get_billing_postcode()))
-			->setCity($order->get_billing_city())
-			->setState($order->get_billing_state())
-			->setCountry("BR");		
+		if (isset($billing_cnpj) && !empty($billing_cnpj)){
+			$transaction->Customer()
+				->setCustomerIdentity(strval($user_id))
+				->setName($billing_name)	
+				->setCnpj($billing_cnpj)			
+				->setEmail($order->get_billing_email())
+				->setAddress($order->get_billing_address_1())
+				->setAddress2($order->get_billing_address_2())			
+				->setPostalCode(preg_replace('/[^0-9]/', '', $order->get_billing_postcode()))
+				->setCity($order->get_billing_city())
+				->setState($order->get_billing_state())
+				->setCountry("BR");				
+		}else{
+			$transaction->Customer()
+				->setCustomerIdentity(strval($user_id))
+				->setName($billing_name)	
+				->setCpf($billing_cpf)	
+				->setCnpj("11111111111111")			
+				->setEmail($order->get_billing_email())
+				->setAddress($order->get_billing_address_1())
+				->setAddress2($order->get_billing_address_2())			
+				->setPostalCode(preg_replace('/[^0-9]/', '', $order->get_billing_postcode()))
+				->setCity($order->get_billing_city())
+				->setState($order->get_billing_state())
+				->setCountry("BR");	
+		}
 		
 
 		if ( $this->gateway->antifraud == 'yes' ){
@@ -675,7 +691,8 @@ class WC_Sixbank_API {
 		$billing_name = $order->get_billing_first_name() . " " . $order->get_billing_last_name();
 		$billing_rg = $order->get_meta( '_billing_rg' );
 		$billing_cpf = $order->get_meta( '_billing_cpf' );
-		
+		$billing_cnpj = $order->get_meta( '_billing_cnpj' );
+
 		$acquirer = $this->gateway->get_acquirer();
 		$method = Methods::CREDIT_CARD_INTEREST_BY_ISSUER;
 		
@@ -715,18 +732,34 @@ class WC_Sixbank_API {
 		if (!isset($billing_cpf) || empty($billing_cpf)){
 			$billing_cpf = 11111111111;
 		}
+
 		// SET CUSTOMER
-		$transaction->Customer()
-			->setCustomerIdentity(strval($user_id))
-			->setName($billing_name)
-			->setCpf($billing_cpf)
-			->setEmail($order->get_billing_email())
-			->setAddress($order->get_billing_address_1())
-			->setAddress2($order->get_billing_address_2())			
-			->setPostalCode(preg_replace('/[^0-9]/', '', $order->get_billing_postcode()))
-			->setCity($order->get_billing_city())
-			->setState($order->get_billing_state())
-			->setCountry("BR");
+		if (isset($billing_cnpj) && !empty($billing_cnpj)){
+			$transaction->Customer()
+				->setCustomerIdentity(strval($user_id))
+				->setName($billing_name)	
+				->setCnpj($billing_cnpj)			
+				->setEmail($order->get_billing_email())
+				->setAddress($order->get_billing_address_1())
+				->setAddress2($order->get_billing_address_2())			
+				->setPostalCode(preg_replace('/[^0-9]/', '', $order->get_billing_postcode()))
+				->setCity($order->get_billing_city())
+				->setState($order->get_billing_state())
+				->setCountry("BR");				
+		}else{
+			$transaction->Customer()
+				->setCustomerIdentity(strval($user_id))
+				->setName($billing_name)	
+				->setCpf($billing_cpf)		
+				->setCnpj("11111111111111")		
+				->setEmail($order->get_billing_email())
+				->setAddress($order->get_billing_address_1())
+				->setAddress2($order->get_billing_address_2())			
+				->setPostalCode(preg_replace('/[^0-9]/', '', $order->get_billing_postcode()))
+				->setCity($order->get_billing_city())
+				->setState($order->get_billing_state())
+				->setCountry("BR");	
+		}
 
 		if ($this->gateway->antifraud == 'yes'){
 			// SET FRAUD DATA OBJECT
@@ -815,7 +848,8 @@ class WC_Sixbank_API {
 		$billing_name = $order->get_billing_first_name() . " " . $order->get_billing_last_name();
 		$billing_rg = $order->get_meta( '_billing_rg' );
 		$billing_cpf = $order->get_meta( '_billing_cpf' );
-		
+		$billing_cnpj = $order->get_meta( '_billing_cnpj' );
+
 		$acquirer = $this->gateway->get_acquirer();
 		
 		// Set PAYMENT		
@@ -830,17 +864,32 @@ class WC_Sixbank_API {
 		$user_id = get_post_meta($order->get_id(), '_customer_user', true);
 
 		// SET CUSTOMER
-		$transaction->Customer()
-			->setCustomerIdentity(strval($user_id))
-			->setName($billing_name)
-			->setCpf($billing_cpf)
-			->setEmail($order->get_billing_email())
-			->setAddress($order->get_billing_address_1())
-			->setAddress2($order->get_billing_address_2())			
-			->setPostalCode(preg_replace('/[^0-9]/', '', $order->get_billing_postcode()))
-			->setCity($order->get_billing_city())
-			->setState($order->get_billing_state())
-			->setCountry("BR");
+		if (isset($billing_cnpj) && !empty($billing_cnpj)){
+			$transaction->Customer()
+				->setCustomerIdentity(strval($user_id))
+				->setName($billing_name)	
+				->setCnpj($billing_cnpj)	
+				->setEmail($order->get_billing_email())
+				->setAddress($order->get_billing_address_1())
+				->setAddress2($order->get_billing_address_2())			
+				->setPostalCode(preg_replace('/[^0-9]/', '', $order->get_billing_postcode()))
+				->setCity($order->get_billing_city())
+				->setState($order->get_billing_state())
+				->setCountry("BR");				
+		}else{
+			$transaction->Customer()
+				->setCustomerIdentity(strval($user_id))
+				->setName($billing_name)	
+				->setCpf($billing_cpf)		
+				->setCnpj("11111111111111")	
+				->setEmail($order->get_billing_email())
+				->setAddress($order->get_billing_address_1())
+				->setAddress2($order->get_billing_address_2())			
+				->setPostalCode(preg_replace('/[^0-9]/', '', $order->get_billing_postcode()))
+				->setCity($order->get_billing_city())
+				->setState($order->get_billing_state())
+				->setCountry("BR");	
+		}
 		
 		// Set URL RETURN
 		$transaction->setUrlReturn( get_rest_url(null, 'sixbank/v1/sixbank_order_return') );
@@ -889,6 +938,7 @@ class WC_Sixbank_API {
 		$billing_name = $order->get_billing_first_name() . " " . $order->get_billing_last_name();
 		$billing_rg = $order->get_meta( '_billing_rg' );
 		$billing_cpf = $order->get_meta( '_billing_cpf' );
+		$billing_cnpj = $order->get_meta( '_billing_cnpj' );
 		
 		$acquirer = $this->gateway->get_acquirer();
 		
@@ -898,17 +948,32 @@ class WC_Sixbank_API {
 
 		$user_id = get_post_meta($order->get_id(), '_customer_user', true);
 		// SET CUSTOMER
-		$transaction->Customer()
-			->setCustomerIdentity(strval($user_id))
-			->setName($billing_name)
-			->setCpf($billing_cpf)
-			->setEmail($order->get_billing_email())
-			->setAddress($order->get_billing_address_1())
-			->setAddress2($order->get_billing_address_2())			
-			->setPostalCode(preg_replace('/[^0-9]/', '', $order->get_billing_postcode()))
-			->setCity($order->get_billing_city())
-			->setState($order->get_billing_state())
-			->setCountry("BR");
+		if (isset($billing_cnpj) && !empty($billing_cnpj)){
+			$transaction->Customer()
+				->setCustomerIdentity(strval($user_id))
+				->setName($billing_name)	
+				->setCnpj($billing_cnpj)			
+				->setEmail($order->get_billing_email())
+				->setAddress($order->get_billing_address_1())
+				->setAddress2($order->get_billing_address_2())			
+				->setPostalCode(preg_replace('/[^0-9]/', '', $order->get_billing_postcode()))
+				->setCity($order->get_billing_city())
+				->setState($order->get_billing_state())
+				->setCountry("BR");				
+		}else{
+			$transaction->Customer()
+				->setCustomerIdentity(strval($user_id))
+				->setName($billing_name)	
+				->setCpf($billing_cpf)	
+				->setCnpj("11111111111111")			
+				->setEmail($order->get_billing_email())
+				->setAddress($order->get_billing_address_1())
+				->setAddress2($order->get_billing_address_2())			
+				->setPostalCode(preg_replace('/[^0-9]/', '', $order->get_billing_postcode()))
+				->setCity($order->get_billing_city())
+				->setState($order->get_billing_state())
+				->setCountry("BR");	
+		}
 		
 		// Set URL RETURN
 		

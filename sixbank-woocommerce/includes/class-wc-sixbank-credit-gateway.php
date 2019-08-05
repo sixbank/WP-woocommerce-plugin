@@ -274,7 +274,7 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 				'label'       => __( 'Enable logging', 'sixbank-woocommerce' ),
 				'default'     => 'no',
 				'description' => sprintf( __( 'Log Sixbank events, such as API requests, inside %s', 'sixbank-woocommerce' ), $this->get_log_file_path() ),
-			),
+			),/*
 			'validate_rg_cpf' => array(
 				'title'       => __( 'Validação CPF', 'sixbank-woocommerce' ),
 				'type'        => 'text',				
@@ -286,7 +286,7 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 				'type'        => 'text',				
 				'desc_tip'    => true,
 				'default'     => 'Por favor, digite um CPF válido.',
-			),
+			),*/
 			'validate_name_holder' => array(
 				'title'       => __( 'Validação titular do cartão', 'sixbank-woocommerce' ),
 				'type'        => 'text',				
@@ -453,10 +453,10 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 			$valid = $this->validate_expiration_date( $_POST,  $this->validate_expired_date );
 		}
 		
-		if ($this->antifraud == 'yes' && $valid){
+		/*if ($this->antifraud == 'yes' && $valid){
 			//Valida CPF e RG
 			$valid = $this->validate_slip_fields( $_POST, $this->validate_rg_cpf, $this->validate_valid_cpf );
-		}
+		}*/
 
 		$cpf = get_post_meta($order->get_id(), '_billing_cpf', true);
 		$rg = get_post_meta($order->get_id(), '_billing_rg', true);
@@ -466,9 +466,9 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 		if (isset($rg) && !empty($rg) && (!isset( $_POST[ 'billing_rg'] ) || '' === $_POST[ 'billing_rg' ])){
 			$_POST['billing_rg'] = $rg;
 		}
-		if ($valid){
+		/*if ($valid){
 			$valid = $this->validate_cpf_fields( $_POST, $this->validate_valid_cpf );
-		}
+		}*/
 
 		// Test the installments.
 		if ( $valid ) {

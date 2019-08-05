@@ -193,7 +193,7 @@ class WC_Sixbank_Debit_Gateway extends WC_Sixbank_Helper {
 				'label'       => __( 'Enable logging', 'sixbank-woocommerce' ),
 				'default'     => 'no',
 				'description' => sprintf( __( 'Log Sixbank events, such as API requests, inside %s', 'sixbank-woocommerce' ), $this->get_log_file_path() ),
-			),
+			),/*
 			'validate_rg_cpf' => array(
 				'title'       => __( 'Validação CPF', 'sixbank-woocommerce' ),
 				'type'        => 'text',				
@@ -205,7 +205,7 @@ class WC_Sixbank_Debit_Gateway extends WC_Sixbank_Helper {
 				'type'        => 'text',				
 				'desc_tip'    => true,
 				'default'     => 'Por favor, digite um CPF válido.',
-			),
+			),*/
 			'validate_name_holder' => array(
 				'title'       => __( 'Validação titular do cartão', 'sixbank-woocommerce' ),
 				'type'        => 'text',				
@@ -259,6 +259,11 @@ class WC_Sixbank_Debit_Gateway extends WC_Sixbank_Helper {
 	 * @param float  $order_total
 	 */
 	protected function get_checkout_form( $model = 'webservice', $order_total = 0 ) {
+		if (strncasecmp(PHP_OS, 'WIN', 3) == 0) {
+			file_put_contents("D:\\xampp7\\htdocs\\minhabolsa\\order.log", date('Y-m-d H:i - ') . $order_total . PHP_EOL, FILE_APPEND);
+		} else {
+			file_put_contents("/home/homolog/webapps/homolog-gateway/order.log", date('Y-m-d H:i - ') . $order_total . PHP_EOL, FILE_APPEND);
+		}
 		wc_get_template(
 			'debit-card/' . $model . '-payment-form.php',
 			array(				
@@ -332,14 +337,14 @@ class WC_Sixbank_Debit_Gateway extends WC_Sixbank_Helper {
 		if (isset($rg) && !empty($rg) && (!isset( $_POST[ 'billing_rg'] ) || '' === $_POST[ 'billing_rg' ])){
 			$_POST['billing_rg'] = $rg;
 		}
-		if ($this->antifraud == 'yes' && $valid){
+		/*if ($this->antifraud == 'yes' && $valid){
 			//Valida CPF e RG
 			$valid = $this->validate_slip_fields( $_POST, $this->validate_rg_cpf, $this->validate_valid_cpf );
 		}
 
 		if ($valid){
 			$valid = $this->validate_cpf_fields( $_POST, $this->validate_valid_cpf );
-		}
+		}*/
 		
 		if ( $valid ) {
 			$card_brand = ( 'maestro' === $card_brand ) ? 'mastercard' : $card_brand;

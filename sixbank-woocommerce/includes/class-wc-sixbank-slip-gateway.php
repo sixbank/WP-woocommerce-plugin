@@ -209,7 +209,7 @@ class WC_Sixbank_Slip_Gateway extends WC_Sixbank_Helper {
 				'desc_tip'    => true,
 				'default'     => 'Atenção! Seu pedido foi realizado com sucesso porém, seu pagamento ainda precisa ser confirmado.
 				Por favor, clique no botão para visualizar e pagar o boleto.',
-			),
+			)/*,
 			'validate_cpf' => array(
 				'title'       => __( 'Validação CPF', 'sixbank-woocommerce' ),
 				'type'        => 'text',				
@@ -227,7 +227,7 @@ class WC_Sixbank_Slip_Gateway extends WC_Sixbank_Helper {
 				'type'        => 'text',				
 				'desc_tip'    => true,
 				'default'     => 'Por favor, digite um CPF válido.',
-			)
+			)*/
 		);
 	}
 
@@ -286,7 +286,7 @@ class WC_Sixbank_Slip_Gateway extends WC_Sixbank_Helper {
 		if (isset($rg) && !empty($rg) && (!isset( $_POST[ 'billing_rg'] ) || '' === $_POST[ 'billing_rg' ])){
 			$_POST['billing_rg'] = $rg;
 		}
-		$valid = $this->validate_rg_cpf_fields( $_POST, $this->validate_rg, $this->validate_cpf, $this->validate_valid_cpf );
+		$valid = true;//$this->validate_rg_cpf_fields( $_POST, $this->validate_rg, $this->validate_cpf, $this->validate_valid_cpf );
 
 		if ( $valid ) {			
 

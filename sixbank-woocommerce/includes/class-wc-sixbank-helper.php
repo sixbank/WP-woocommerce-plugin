@@ -187,7 +187,7 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 
 			// Gets order total from cart/checkout.
 		} elseif ( 0 < $woocommerce->cart->total ) {
-			$order_total = (float) $woocommerce->cart->cart_contents_total;
+			$order_total = (float) $woocommerce->cart->total;
 		}
 
 		return $order_total;
@@ -721,6 +721,8 @@ abstract class WC_Sixbank_Helper extends WC_Payment_Gateway {
 			update_user_meta( $user_id, 'billing_phone', $order->billing_phone );
 			update_user_meta( $user_id, 'billing_postcode', $order->billing_postcode );
 			update_user_meta( $user_id, 'billing_state', $order->billing_state );
+			update_user_meta( $user_id, 'billing_cpf', $order->billing_cpf );
+			update_user_meta( $user_id, 'billing_rg', $order->billing_rg );
 			
 			// user's shipping data
 			update_user_meta( $user_id, 'shipping_address_1', $order->shipping_address_1 );

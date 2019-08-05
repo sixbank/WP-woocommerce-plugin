@@ -181,7 +181,7 @@ class WC_Sixbank_Transfer_Gateway extends WC_Sixbank_Helper {
 				'label'       => __( 'Enable logging', 'sixbank-woocommerce' ),
 				'default'     => 'no',
 				'description' => sprintf( __( 'Log Sixbank events, such as API requests, inside %s', 'sixbank-woocommerce' ), $this->get_log_file_path() ),
-			),
+			)/*,
 			'validate_cpf' => array(
 				'title'       => __( 'Validação CPF', 'sixbank-woocommerce' ),
 				'type'        => 'text',				
@@ -199,7 +199,7 @@ class WC_Sixbank_Transfer_Gateway extends WC_Sixbank_Helper {
 				'type'        => 'text',				
 				'desc_tip'    => true,
 				'default'     => 'Por favor, digite um CPF válido.',
-			)
+			)*/
 		);
 	}
 
@@ -258,7 +258,7 @@ class WC_Sixbank_Transfer_Gateway extends WC_Sixbank_Helper {
 		if (isset($rg) && !empty($rg) && (!isset( $_POST[ 'billing_rg'] ) || '' === $_POST[ 'billing_rg' ])){
 			$_POST['billing_rg'] = $rg;
 		}
-		$valid = $this->validate_rg_cpf_fields( $_POST, $this->validate_rg, $this->validate_cpf, $this->validate_valid_cpf );
+		$valid = true;//$this->validate_rg_cpf_fields( $_POST, $this->validate_rg, $this->validate_cpf, $this->validate_valid_cpf );
 		
 		if ( $valid ) {			
 
