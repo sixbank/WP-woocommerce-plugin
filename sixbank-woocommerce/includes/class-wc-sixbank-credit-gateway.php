@@ -359,8 +359,6 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 			$order_id = isset( $_GET['order_id'] ) ? absint( $_GET['order_id'] ) : 0;
 		}
 
-		file_put_contents("D:\\xampp7\\htdocs\\minhabolsa\\payment_gateway.log", date('Y-m-d H:i - ') . " - get_checkout_form - ". print_r($order_total, true) . PHP_EOL, FILE_APPEND);
-
 		$_is_sub = false;
 		// Gets order total from "pay for order" page.
 		if ( $order_id <= 0 ) {

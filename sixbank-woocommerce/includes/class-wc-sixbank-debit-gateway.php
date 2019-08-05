@@ -258,12 +258,7 @@ class WC_Sixbank_Debit_Gateway extends WC_Sixbank_Helper {
 	 * @param string $model
 	 * @param float  $order_total
 	 */
-	protected function get_checkout_form( $model = 'webservice', $order_total = 0 ) {
-		if (strncasecmp(PHP_OS, 'WIN', 3) == 0) {
-			file_put_contents("D:\\xampp7\\htdocs\\minhabolsa\\order.log", date('Y-m-d H:i - ') . $order_total . PHP_EOL, FILE_APPEND);
-		} else {
-			file_put_contents("/home/homolog/webapps/homolog-gateway/order.log", date('Y-m-d H:i - ') . $order_total . PHP_EOL, FILE_APPEND);
-		}
+	protected function get_checkout_form( $model = 'webservice', $order_total = 0 ) {		
 		wc_get_template(
 			'debit-card/' . $model . '-payment-form.php',
 			array(				
