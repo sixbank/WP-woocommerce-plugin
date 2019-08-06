@@ -69,7 +69,7 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 				}
 				
 				add_action( 'template_redirect', array($this, 'set_custom_data_wc_session' ));
-				//add_filter('woocommerce_billing_fields', array($this, 'custom_woocommerce_billing_fields'));
+				add_filter('woocommerce_billing_fields', array($this, 'custom_woocommerce_billing_fields'), 99);
 				add_action('woocommerce_order_item_add_action_buttons', array($this, 'action_woocommerce_order_item_add_action_buttons'), 10, 1);
 				add_action('save_post', array($this, 'capture_save_action'), 10, 3);
 				add_action( 'rest_api_init', function () {
@@ -397,21 +397,22 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 		}
 
 		function set_custom_data_wc_session () {
-			/*if ( isset( $_POST['billing_rg'] ) || isset( $_POST['billing_cpf'] ) ) {
+			if ( isset( $_POST['billing_rg'] ) || isset( $_POST['billing_cpf'] ) ) {
 				$billing_rg   = isset( $_POST['billing_rg'] )  ? esc_attr( $_POST['billing_rg'] )   : '';
 				$billing_cpf = isset( $_POST['billing_cpf'] ) ? esc_attr( $_POST['billing_cpf'] ) : '';
 		
 				// Set the session data
 				WC()->session->set( 'custom_data', array( 'billing_rg' => $billing_rg, 'billing_cpf' => $billing_cpf ) );
-			}*/
+			}
 		}
 
 		function custom_woocommerce_billing_fields($fields)
 		{
-
+			
+			$customer = WC()->session->get('customer');
 			$data = WC()->session->get('custom_data');
-
-			$fields['billing_rg'] = array(
+			
+			/*$fields['billing_rg'] = array(
 				'label' => __('RG', 'woocommerce'), // Add custom field label
 				'placeholder' => _x('RG', 'placeholder', 'woocommerce'), // Add custom field placeholder
 				'required' => false, // if field is required or not
@@ -429,14 +430,54 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 				'clear' => false, // add clear or not
 				'type' => 'number', // add field type
 				'class' => array('cpf')    // add class name
-			);
-					
+			);*/
+			
+			if( isset($customer['first_name']) && ! empty($customer['first_name']) )
+			$fields['billing_first_name']['default'] = $customer['first_name'];
+
+			if( isset($customer['last_name']) && ! empty($customer['last_name']) )
+			$fields['billing_last_name']['default'] = $customer['last_name'];
+
+			if( isset($customer['postcode']) && ! empty($customer['postcode']) )
+			$fields['billing_postcode']['default'] = $customer['postcode'];
+
+			if( isset($customer['city']) && ! empty($customer['city']) )
+			$fields['billing_city']['default'] = $customer['city'];
+
+			if( isset($customer['address']) && ! empty($customer['address']) )
+			$fields['billing_address_1']['default'] = $customer['address'];
+
+			if( isset($customer['state']) && ! empty($customer['state']) )
+			$fields['billing_state']['default'] = $customer['state'];
+			
+			if( isset($customer['phone']) && ! empty($customer['phone']) )
+			$fields['billing_phone']['default'] = $customer['phone'];
+
+			if( isset($customer['email']) && ! empty($customer['email']) )
+			$fields['billing_email']['default'] = $customer['email'];
+
 			if( isset($data['billing_rg']) && ! empty($data['billing_rg']) )
 			$fields['billing_rg']['default'] = $data['billing_rg'];
 				
 			if( isset($data['billing_cpf']) && ! empty($data['billing_cpf']) )
 			$fields['billing_cpf']['default'] = $data['billing_cpf'];
 
+			if( isset($data['billing_cnpj']) && ! empty($data['billing_cnpj']) )
+			$fields['billing_cnpj']['default'] = $data['billing_cnpj'];
+
+			if( isset($data['billing_persontype']) && ! empty($data['billing_persontype']) )
+			$fields['billing_persontype']['default'] = $data['billing_persontype'];
+
+			if( isset($data['billing_birthdate']) && ! empty($data['billing_birthdate']) )
+			$fields['billing_birthdate']['default'] = $data['billing_birthdate'];
+			
+			if( isset($data['billing_sex']) && ! empty($data['billing_sex']) )
+			$fields['billing_sex']['default'] = $data['billing_sex'];
+					
+			if( isset($data['billing_number']) && ! empty($data['billing_number']) )
+			$fields['billing_number']['default'] = $data['billing_number'];
+					
+			
 			return $fields;
 		}
 
@@ -610,6 +651,8 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 
 		
 		function sixbank_unset_gateway_subscription( $available_gateways ) {
+			if (is_admin()) return $available_gateways;
+			
 			$order_total = 0;
 			if ( defined( 'WC_VERSION' ) && version_compare( WC_VERSION, '2.1', '>=' ) ) {
 				$order_id = absint( get_query_var( 'order-pay' ) );

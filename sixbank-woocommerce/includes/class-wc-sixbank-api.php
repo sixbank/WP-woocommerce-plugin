@@ -412,11 +412,25 @@ class WC_Sixbank_API {
 
 		$billing_rg = $order->get_meta( '_billing_rg' );
 		$billing_cpf = $order->get_meta( '_billing_cpf' );
+		$billing_cnpj = $order->get_meta( '_billing_cnpj' );
+		$billing_persontype = $order->get_meta( '_billing_persontype' );
+		$billing_birthdate = $order->get_meta( '_billing_birthdate' );
+		$billing_sex = $order->get_meta( '_billing_sex' );
+		$billing_number = $order->get_meta( '_billing_number' );
 
-		/*if ( isset( $billing_rg ) || isset( $billing_cpf) ) {			
+		if ( isset( $billing_rg ) || isset( $billing_cpf) ) {			
 			// Set the session data
-			WC()->session->set( 'custom_data', array( 'billing_rg' => $billing_rg, 'billing_cpf' => $billing_cpf ) );
-		}*/
+			WC()->session->set( 'custom_data', 
+				array( 'billing_persontype' => $billing_persontype, 
+				'billing_cnpj' => $billing_cnpj,
+				'billing_rg' => $billing_rg,
+				'billing_cpf' => $billing_cpf, 
+				'billing_birthdate' => $billing_birthdate, 
+				'billing_sex' => $billing_sex,
+				'billing_number' => $billing_number
+				)
+			);
+		}
 
 		// Set the order total with interest.
 		if ( $installments >= $this->gateway->interest && isset($this->gateway->interest)  ) {
