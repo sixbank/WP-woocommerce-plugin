@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	</p>
 	<p class="form-row form-row-last">
 		<label for="sixbank-card-cvv"><?php _e( 'Security Code', 'sixbank-woocommerce' ); ?> <span class="required">*</span></label>
-		<input id="sixbank-card-cvv" name="sixbank_debit_cvv" class="input-text wc-credit-card-form-card-cvv" type="tel" autocomplete="off" placeholder="<?php _e( 'CVV', 'sixbank-woocommerce' ); ?>" style="font-size: 1.5em; padding: 8px;" />
+		<input id="sixbank-card-cvv" name="sixbank_debit_cvv" class="input-text wc-credit-card-form-card-cvv" type="tel" maxlength="4" autocomplete="off" placeholder="<?php _e( 'CVV', 'sixbank-woocommerce' ); ?>" style="font-size: 1.5em; padding: 8px;" />
 	</p>	
 	<?php if ( 0 < $discount ) : ?>		
 		<p class="form-row form-row-wide discount">
