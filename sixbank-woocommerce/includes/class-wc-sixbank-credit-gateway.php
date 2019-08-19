@@ -233,10 +233,11 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 			),			
 			'interest_rate' => array(
 				'title'       => __( 'Interest Rate (%)', 'sixbank-woocommerce' ),
-				'type'        => 'number',
+				'type'        => 'text',
 				'description' => __( 'Percentage of interest that will be charged to the customer in the installment where there is interest rate to be charged.', 'sixbank-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '2',
+				'class'       => 'onlycurrency'
 			),
 			'interest' => array(
 				'title'       => __( 'Charge Interest Since', 'sixbank-woocommerce' ),
