@@ -143,7 +143,8 @@ class WC_Sixbank_Debit_Gateway extends WC_Sixbank_Helper {
 					'cielo_loja'       => __( 'CIELO - BUY PAGE LOJA', 'sixbank-woocommerce' ),					
 					'cielo_api'       => __( 'CIELO - SOLUÇÃO API 3.0', 'sixbank-woocommerce' ),
 					'erede'        => __( 'e-Rede Webservice', 'sixbank-woocommerce' ),					
-					'getnet'   => __( 'GETNET V1', 'sixbank-woocommerce' ),					
+					'getnet'   => __( 'Getnet e-Commerce', 'sixbank-woocommerce' ),
+					'getnet_v1'   => __( 'Getnet Plataforma Digital', 'sixbank-woocommerce' ),			
 					'global_payments'       => __( 'GLOBAL PAYMENTS', 'sixbank-woocommerce' ),															
 				),
 			),			
@@ -275,7 +276,8 @@ class WC_Sixbank_Debit_Gateway extends WC_Sixbank_Helper {
 		if ($pm == 'cielo_loja') $name = Acquirers::CIELO_BUY_PAGE_LOJA;		
 		if ($pm == 'cielo_api') $name = Acquirers::CIELO_V3;		
 		if ($pm == 'global_payments') $name = Acquirers::GLOBAL_PAYMENT;
-		if ($pm == 'getnet') $name = Acquirers::GETNET_V1;
+		if ($pm == 'getnet') $name = Acquirers::GETNET;
+		if ($pm == 'getnet_v1') $name = Acquirers::GETNET_V1;	
 		if ($pm == 'erede') $name = Acquirers::REDE_E_REDE;
 		if ($pm == 'firstdata') $name = Acquirers::FIRSTDATA;				
 		if ($pm == 'sixbank') $name = Acquirers::SIXBANK;

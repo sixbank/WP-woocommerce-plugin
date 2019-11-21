@@ -161,7 +161,8 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 					'cielo'       => __( 'CIELO - BUY PAGE CIELO', 'sixbank-woocommerce' ),
 					'cielo_api'       => __( 'CIELO - SOLUÇÃO API 3.0', 'sixbank-woocommerce' ),
 					'erede'        => __( 'e-Rede Webservice', 'sixbank-woocommerce' ),					
-					'getnet'   => __( 'GETNET', 'sixbank-woocommerce' ),
+					'getnet'   => __( 'Getnet e-Commerce', 'sixbank-woocommerce' ),
+					'getnet_v1'   => __( 'Getnet Plataforma Digital', 'sixbank-woocommerce' ),
 					'granito'       => __( 'Granito Pagamentos', 'sixbank-woocommerce' ),
 					'global_payments'       => __( 'GLOBAL PAYMENTS', 'sixbank-woocommerce' ),
 					'komerci_webservice'       => __( 'REDE - KOMERCI WEBSERVICE', 'sixbank-woocommerce' ),
@@ -401,6 +402,7 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 		if ($pm == 'granito') $name = Acquirers::GRANITO;		
 		if ($pm == 'global_payments') $name = Acquirers::GLOBAL_PAYMENT;
 		if ($pm == 'getnet') $name = Acquirers::GETNET;
+		if ($pm == 'getnet_v1') $name = Acquirers::GETNET_V1;
 		if ($pm == 'erede') $name = Acquirers::REDE_E_REDE;
 		if ($pm == 'firstdata') $name = Acquirers::FIRSTDATA;		
 		if ($pm == 'komerci_webservice') $name = Acquirers::REDE_KOMERCI_WEBSERVICE;
