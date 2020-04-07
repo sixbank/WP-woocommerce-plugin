@@ -6,7 +6,7 @@ namespace sixbank;
  * Description: Solution to receive payments on WooCommerce.
  * Author:      Evolutap
  * Author URI:  https://www.sixbank.net/
- * Version:     1.0.0
+ * Version:     1.0.1
  * License:     GPLv2 or later
  * Text Domain: sixbank-woocommerce
  * Domain Path: /languages
@@ -37,7 +37,7 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 		 *
 		 * @var string
 		 */
-		const VERSION = '1.0.0';
+		const VERSION = '1.0.1';
 
 		/**
 		 * Instance of this class.
