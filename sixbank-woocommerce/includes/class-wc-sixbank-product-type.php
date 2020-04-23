@@ -1,5 +1,5 @@
 <?php
-add_filter( 'product_type_selector', 'sixbank_add_custom_product_type' );
+//add_filter( 'product_type_selector', 'sixbank_add_custom_product_type' );
 add_filter( 'init', 'sixbank_create_custom_product_type' );
 add_filter( 'woocommerce_product_class', 'sixbank_woocommerce_product_class', 10, 2 );
 add_action( 'admin_footer', 'simple_subscription_custom_js' );
