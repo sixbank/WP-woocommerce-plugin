@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	</p>
 	<p class="form-row form-row-last">
 		<label for="sixbank-card-holder-name"><?php _e( 'Name Printed on the Card', 'sixbank-woocommerce' ); ?> <span class="required">*</span></label>
-		<input id="sixbank-card-holder-name" name="sixbank_credit_holder_name" class="input-text" type="text" autocomplete="off" style="font-size: 1.5em; padding: 8px;" />
+		<input id="sixbank-card-holder-name" maxlength="20" name="sixbank_credit_holder_name" class="input-text" type="text" autocomplete="off" style="font-size: 1.5em; padding: 8px;" />
 	</p>
 	<div class="clear"></div>
 	<p class="form-row form-row-first">
