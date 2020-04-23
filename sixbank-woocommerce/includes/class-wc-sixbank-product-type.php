@@ -7,8 +7,8 @@ add_action( 'admin_footer', 'admin_options' );
 add_filter( 'woocommerce_add_to_cart_validation', 'is_product_the_same_type',10,3);
 add_action( 'woocommerce_single_product_summary', 'sixbank_subscription_template', 60 );
 add_action( 'woocommerce_sixbank_subscription_to_cart', 'sixbank_subscription_add_to_cart', 30 );
-add_action( 'woocommerce_product_options_general_product_data', 'sixbank_product_fields' );
-add_action( 'woocommerce_process_product_meta', 'sixbank_product_fields_save' );
+//add_action( 'woocommerce_product_options_general_product_data', 'sixbank_product_fields' );
+//add_action( 'woocommerce_process_product_meta', 'sixbank_product_fields_save' );
 add_filter( 'woocommerce_cart_item_quantity', 'sixbank_product_change_quantity', 10, 3);
 add_action('woocommerce_check_cart_items', 'validate_all_cart_contents');
 add_filter( 'pre_option_woocommerce_default_gateway' . '__return_false', 99 );
@@ -56,7 +56,9 @@ function validate_all_cart_contents(){
     $othertype = false;
     foreach ( WC()->cart->get_cart() as $cart_item_key => $values ) {
         $_product = $values['data']; 
-        if ($_product->is_type('sixbank_subscription')){            
+        $sixbank_recurrent = get_post_meta($values['product_id'], 'sixbank_product_recurrent', true);
+        if ($sixbank_recurrent == 'yes'){
+        //if ($_product->is_type('sixbank_subscription')){            
             $count++;            
         }else{
             $othertype = true;
@@ -158,7 +160,9 @@ function is_product_the_same_type($valid, $product_id, $quantity) {
     $othertype = false;
     foreach ( $woocommerce->cart->get_cart() as $cart_item_key => $values ) {
         $_product = $values['data']; 
-        if ($_product->is_type('sixbank_subscription')){            
+        $sixbank_recurrent = get_post_meta($values['product_id'], 'sixbank_product_recurrent', true);
+        if ($sixbank_recurrent == 'yes'){
+        //if ($_product->is_type('sixbank_subscription')){            
             $count++;            
         }else{
             $othertype = true;
@@ -166,7 +170,9 @@ function is_product_the_same_type($valid, $product_id, $quantity) {
     }
     $_is_sub = false;
     $_product = wc_get_product( $product_id );
-    if ($_product->is_type('sixbank_subscription')){        
+    $sixbank_recurrent = get_post_meta($product_id, 'sixbank_product_recurrent', true);
+    if ($sixbank_recurrent == 'yes'){
+    //if ($_product->is_type('sixbank_subscription')){        
         $_is_sub = true;            
     }
         
@@ -249,7 +255,9 @@ function sixbank_product_change_quantity( $product_quantity, $cart_item_key, $ca
     $product_id = $cart_item['product_id'];
     $product = wc_get_product($product_id);
     // whatever logic you want to determine whether or not to alter the input
-    if ( $product->is_type('sixbank_subscription') ) {
+    $sixbank_recurrent = get_post_meta($product_id, 'sixbank_product_recurrent', true);
+    if ($sixbank_recurrent == 'yes'){
+    //if ( $product->is_type('sixbank_subscription') ) {
         return '<span>1</span>';
     }
 

@@ -93,11 +93,108 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 				add_action( 'plugins_loaded', array($this, 'sixbank_update_db_check' ) );				
 				add_action( 'init', array($this, 'register_authorized_order_status' ) );
 				add_filter( 'wc_order_statuses', array($this,'add_authorized_to_order_statuses' ) );
+
+				add_filter( 'woocommerce_product_data_tabs', array( $this, 'woocommerce_product_data_tab') , 99 , 1 );
+				add_action( 'woocommerce_product_data_panels', array( $this, 'woocommerce_product_custom_fields' )); 				
+				add_action( 'woocommerce_process_product_meta', array( $this, 'woocommerce_product_custom_fields_save' ) );
 			} else {
 				add_action( 'admin_notices', array( $this, 'woocommerce_missing_notice' ) );
 			}
 
 		}
+
+		function woocommerce_product_data_tab( $product_data_tabs ) {
+			$product_data_tabs['sixbank_recurrent'] = array(
+				'label' => __( 'Recorrência', 'sixbank' ),
+				'target' => 'sixbank_recurrent_tab',
+			);
+			return $product_data_tabs;
+		}
+
+		function woocommerce_product_custom_fields()
+		{
+			global $woocommerce, $post;
+			echo '<div id="sixbank_recurrent_tab" class="panel woocommerce_options_panel">';
+
+			woocommerce_wp_select(
+				array(
+					'id' => 'sixbank_product_recurrent',
+					'placeholder' => 'Produto recorrente?',
+					'label' => __('Produto recorrente?', 'woocommerce'),
+					'desc_tip' => 'true',
+					'options' => array(
+						'no' => 'Não',
+						'yes' => 'Sim',						
+					)
+				)
+			);
+
+			woocommerce_wp_select(
+				array(
+					'id' => 'sixbank_subscription_period',
+					'placeholder' => 'Produto recorrente?',
+					'label' => __('Todo(a)?', 'woocommerce'),
+					'desc_tip' => 'true',
+					'options' => array(
+						'day' => 'Dia',
+						'week' => 'Semana',
+						'month' => 'Mês',
+						'year' => 'Ano',
+					)
+				)
+			);
+			
+			// Custom Product Text Field
+			woocommerce_wp_text_input(
+				array(
+					'id' => 'sixbank_subscription_days',
+					'placeholder' => 'Expira após (em dias)',
+					'label' => __('Expira após (em dias)', 'woocommerce'),
+					'type' => 'number',
+					'custom_attributes' => array(
+						'step' => 'any',
+						'min' => '0'
+					)
+				)
+			);
+
+			
+
+			//Custom Product Number Field
+			woocommerce_wp_text_input(
+				array(
+					'id' => 'sixbank_subscription_frequency',
+					'placeholder' => 'Frequência / a cada',
+					'label' => __('Frequência / a cada', 'woocommerce'),
+					'type' => 'number',
+					'custom_attributes' => array(
+						'step' => 'any',
+						'min' => '0'
+					)
+				)
+			);			
+			echo '</div>';
+		}
+
+		function woocommerce_product_custom_fields_save($post_id)
+		{
+			$sixbank_product_recurrent = $_POST['sixbank_product_recurrent'];
+			if (!empty($sixbank_product_recurrent))
+				update_post_meta($post_id, 'sixbank_product_recurrent', esc_attr($sixbank_product_recurrent));
+			// Custom Product Text Field
+			$sixbank_subscription_period = $_POST['sixbank_subscription_period'];
+			if (!empty($sixbank_subscription_period))
+				update_post_meta($post_id, 'sixbank_subscription_period', esc_attr($sixbank_subscription_period));
+			// Custom Product Number Field
+			$sixbank_subscription_days = $_POST['sixbank_subscription_days'];
+			if (!empty($sixbank_subscription_days))
+				update_post_meta($post_id, 'sixbank_subscription_days', esc_attr($sixbank_subscription_days));
+			// Custom Product Textarea Field
+			$sixbank_subscription_frequency = $_POST['sixbank_subscription_frequency'];
+			if (!empty($sixbank_subscription_frequency))
+				update_post_meta($post_id, 'sixbank_subscription_frequency', esc_html($sixbank_subscription_frequency));
+		}
+
 
 		function child_plugin_has_parent_plugin() {
 			if ( is_admin() && current_user_can( 'activate_plugins' ) &&  !is_plugin_active( 'woocommerce-extra-checkout-fields-for-brazil/woocommerce-extra-checkout-fields-for-brazil.php' ) ) {
@@ -664,7 +761,9 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 			if ($order_id <= 0){					
 				foreach ( WC()->cart->get_cart_contents() as $key => $values ) {
 					$_product = $values['data'];
-					if ($_product->is_type('sixbank_subscription')){
+					$sixbank_recurrent = get_post_meta($values['product_id'], 'sixbank_product_recurrent', true);
+        			if ($sixbank_recurrent == 'yes'){
+					//if ($_product->is_type('sixbank_subscription')){
 						$unset = true;
 					}
 				}
@@ -674,7 +773,9 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 				foreach( $order->get_items() as $item_id => $item ){
 					//Get the WC_Product object
 					$_product = $item->get_product();
-					if ($_product->is_type('sixbank_subscription')){
+					$sixbank_recurrent = get_post_meta($values['product_id'], 'sixbank_product_recurrent', true);
+        			if ($sixbank_recurrent == 'yes'){
+					//if ($_product->is_type('sixbank_subscription')){
 						$unset = true;
 					}
 				}	

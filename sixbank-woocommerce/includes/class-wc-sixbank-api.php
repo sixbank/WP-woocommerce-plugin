@@ -479,7 +479,9 @@ class WC_Sixbank_API {
 			//Verifica se a compra é de recorrencia
 			foreach ( WC()->cart->get_cart_contents() as $key => $values ) {
 				$_product = $values['data'];
-				if ($_product->is_type('sixbank_subscription')){
+				$sixbank_recurrent = get_post_meta($_product->get_id(), 'sixbank_product_recurrent', true);
+        		if ($sixbank_recurrent == 'yes'){
+				//if ($_product->is_type('sixbank_subscription')){
 					$subscription = true;					
 					$frequency = (int) get_post_meta($_product->get_id(), 'sixbank_subscription_frequency', true);
 					$period = get_post_meta($_product->get_id(), 'sixbank_subscription_period', true);
