@@ -481,7 +481,6 @@ class WC_Sixbank_API {
 				$_product = $values['data'];
 				$sixbank_recurrent = get_post_meta($_product->get_id(), 'sixbank_product_recurrent', true);
         		if ($sixbank_recurrent == 'yes'){
-				//if ($_product->is_type('sixbank_subscription')){
 					$subscription = true;					
 					$frequency = (int) get_post_meta($_product->get_id(), 'sixbank_subscription_frequency', true);
 					$period = get_post_meta($_product->get_id(), 'sixbank_subscription_period', true);

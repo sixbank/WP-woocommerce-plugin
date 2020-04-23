@@ -762,8 +762,7 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 				foreach ( WC()->cart->get_cart_contents() as $key => $values ) {
 					$_product = $values['data'];
 					$sixbank_recurrent = get_post_meta($values['product_id'], 'sixbank_product_recurrent', true);
-        			if ($sixbank_recurrent == 'yes'){
-					//if ($_product->is_type('sixbank_subscription')){
+        			if ($sixbank_recurrent == 'yes'){					
 						$unset = true;
 					}
 				}
@@ -774,8 +773,7 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 					//Get the WC_Product object
 					$_product = $item->get_product();
 					$sixbank_recurrent = get_post_meta($values['product_id'], 'sixbank_product_recurrent', true);
-        			if ($sixbank_recurrent == 'yes'){
-					//if ($_product->is_type('sixbank_subscription')){
+        			if ($sixbank_recurrent == 'yes'){					
 						$unset = true;
 					}
 				}	
