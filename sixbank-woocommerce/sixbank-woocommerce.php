@@ -6,7 +6,7 @@ namespace sixbank;
  * Description: Solution to receive payments on WooCommerce.
  * Author:      Evolutap
  * Author URI:  https://www.sixbank.net/
- * Version:     1.0.1
+ * Version:     1.0.0
  * License:     GPLv2 or later
  * Text Domain: sixbank-woocommerce
  * Domain Path: /languages
@@ -37,7 +37,7 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 		 *
 		 * @var string
 		 */
-		const VERSION = '1.0.1';
+		const VERSION = '1.0.0';
 
 		/**
 		 * Instance of this class.
@@ -85,7 +85,7 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 					) );
 					register_rest_route( 'sixbank/v1', '/sixbank_order_return', array(
 						'methods' => 'POST',
-						'callback' => array($this, 'sixbank_order_return'),
+						'callback' => array($this, 'sixbank_order_return_post'),
 					) );
 				} );
 				add_filter( 'user_has_cap', array($this, 'order_pay_without_login'), 9999, 3 );					
@@ -450,6 +450,104 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 			die();
 		}
 
+		function sixbank_order_return_post($data){
+			global $wpdb;
+			$tid = $data['TID'];
+			$recurrences_id = $data['recurrences_id'];
+			$order_ref = $data['order_reference'];
+			$status = $data['status'];			
+			
+			//Busca o pedido pela referencia
+			$original_order_id = $order_ref;
+			$original_order  = wc_get_order( $order_ref  );
+
+			$gateway = new \sixbank\payment\WC_Sixbank_Credit_Gateway();
+			$response = $gateway->report($original_order , $tid);
+			//$status = $response->getResponse()['status'];
+						
+			if (!$original_order ){
+				echo json_encode(array('data' => 'Order not found'));
+				header('HTTP/1.0 204 Not Found', true, 204);
+				die();
+			}
+			
+			//Se for recorrencia, cria um novo pedido
+			if ($recurrences_id && in_array($status, [4, 8]) ){
+				$order_id = $this->create_order($original_order_id);
+
+				$order = new \WC_Order($order_id);
+
+				//Adiciona o ticket id
+				update_post_meta( $order_id, '_ticket_id', $data['ticket_id']);
+
+				$this->duplicate_order_header($original_order_id, $order_id);
+				$this->duplicate_billing_fieds($original_order_id, $order_id);
+				$this->duplicate_shipping_fieds($original_order_id, $order_id);
+
+				$this->duplicate_line_items($original_order, $order_id);
+				$this->duplicate_shipping_items($original_order, $order_id);
+				$this->duplicate_coupons($original_order, $order_id);
+				$this->duplicate_payment_info($original_order_id, $order_id, $order);
+				$order->calculate_taxes();
+				$this->add_order_note($original_order_id, $order);
+			}else{
+				$order = $original_order;			
+			}
+
+			//Atualizar de acordo com status
+			switch($status){
+				case 0: //Criado
+					$order->add_order_note( "Criada" );
+					break;
+				case 1: //Autenticada
+					$order->add_order_note( "Autenticada" );
+					break;
+				case 2: //Não-autenticada
+					$order->add_order_note( "Não-autenticada" );
+					break;
+				case 3: //Autorizada pela operadora
+					$order->add_order_note( "Autorizada pela operadora" );
+					$order->update_status( 'authorized' );
+					break;
+				case 4: //Não-autorizada pela operadora
+					$order->add_order_note( "Não-autorizada pela operadora" );
+					$order->update_status( 'failed' );
+					break;
+				case 5: //Em cancelamento
+					$order->add_order_note( "Em cancelamento" );
+					break;
+				case 6: //Cancelado
+					$order->add_order_note( "Cancelado" );
+					$order->update_status( 'cancelled' );
+					break;
+				case 7: //Em captura
+					$order->add_order_note( "Em captura" );
+					break;
+				case 8: //Capturada / Finalizada					
+					$order->add_order_note( "Capturada / Finalizada" );
+					$order->payment_complete();
+					$order->update_status( 'processing' );
+					break;
+				case 9: //Não-capturada
+					$order->add_order_note( "Não-capturada" );
+					break;
+				case 10: //Pagamento Recorrente - Agendada
+					$order->add_order_note( "Pagamento Recorrente - Agendada" );
+					break;
+				case 11: //Boleto Gerado
+					$order->add_order_note( "Boleto gerado" );
+					break;
+			}
+
+			$order->save();
+			if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+				echo json_encode(array("data" => "OK"));
+			}else{
+				header('Location: ' . urldecode($gateway->get_api_return_url($order)) );							
+			}			
+			die();
+		}
+
 		// add new button for woocommerce
 		
 		// define the woocommerce_order_item_add_action_buttons callback
@@ -762,7 +860,8 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 				foreach ( WC()->cart->get_cart_contents() as $key => $values ) {
 					$_product = $values['data'];
 					$sixbank_recurrent = get_post_meta($values['product_id'], 'sixbank_product_recurrent', true);
-        			if ($sixbank_recurrent == 'yes'){					
+        			if (WC()->session->get('cart_recurrent')){
+					//if ($_product->is_type('sixbank_subscription')){
 						$unset = true;
 					}
 				}
@@ -773,7 +872,8 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 					//Get the WC_Product object
 					$_product = $item->get_product();
 					$sixbank_recurrent = get_post_meta($values['product_id'], 'sixbank_product_recurrent', true);
-        			if ($sixbank_recurrent == 'yes'){					
+        			if (WC()->session->get('cart_recurrent')){
+					//if ($_product->is_type('sixbank_subscription')){
 						$unset = true;
 					}
 				}	
@@ -803,6 +903,168 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 				unset( $available_gateways['sixbank_transfer'] );
 			}
 			return $available_gateways;
+		}
+
+		private function create_order($original_order_id) {
+			$new_post_author    = wp_get_current_user();
+			$new_post_date      = current_time( 'mysql' );
+			$new_post_date_gmt  = get_gmt_from_date( $new_post_date );
+	
+			$order_data =  array(
+				'post_author'   => $new_post_author->ID,
+				'post_date'     => $new_post_date,
+				'post_date_gmt' => $new_post_date_gmt,
+				'post_type'     => 'shop_order',
+				'post_title'    => __( 'Recurrent Order', 'woocommerce' ),
+				/* 'post_status'   => 'draft', */
+				'post_status'   => 'wc-on-hold',
+				'ping_status'   => 'closed',
+				/* 'post_excerpt'  => 'Duplicate Order based on original order ' . $original_order_id, */
+				'post_password' => uniqid( 'order_' ),   // Protects the post just in case
+				'post_modified'             => $new_post_date,
+				'post_modified_gmt'         => $new_post_date_gmt
+			);
+	
+			$new_post_id = wp_insert_post( $order_data, true );
+	
+			return $new_post_id;
+		}
+
+		private function duplicate_order_header($original_order_id, $order_id) {
+			update_post_meta( $order_id, '_order_shipping',         get_post_meta($original_order_id, '_order_shipping', true) );
+			update_post_meta( $order_id, '_order_discount',         get_post_meta($original_order_id, '_order_discount', true) );
+			update_post_meta( $order_id, '_cart_discount',          get_post_meta($original_order_id, '_cart_discount', true) );
+			update_post_meta( $order_id, '_order_tax',              get_post_meta($original_order_id, '_order_tax', true) );
+			update_post_meta( $order_id, '_order_shipping_tax',     get_post_meta($original_order_id, '_order_shipping_tax', true) );
+			update_post_meta( $order_id, '_order_total',            get_post_meta($original_order_id, '_order_total', true) );
+	
+			update_post_meta( $order_id, '_order_key',              'wc_' . apply_filters('woocommerce_generate_order_key', uniqid('order_') ) );
+			update_post_meta( $order_id, '_customer_user',          get_post_meta($original_order_id, '_customer_user', true) );
+			update_post_meta( $order_id, '_order_currency',         get_post_meta($original_order_id, '_order_currency', true) );
+			update_post_meta( $order_id, '_prices_include_tax',     get_post_meta($original_order_id, '_prices_include_tax', true) );
+			update_post_meta( $order_id, '_customer_ip_address',    get_post_meta($original_order_id, '_customer_ip_address', true) );
+			update_post_meta( $order_id, '_customer_user_agent',    get_post_meta($original_order_id, '_customer_user_agent', true) );
+		}
+	
+		private function duplicate_billing_fieds($original_order_id, $order_id) {
+			update_post_meta( $order_id, '_billing_city',           get_post_meta($original_order_id, '_billing_city', true));
+			update_post_meta( $order_id, '_billing_state',          get_post_meta($original_order_id, '_billing_state', true));
+			update_post_meta( $order_id, '_billing_postcode',       get_post_meta($original_order_id, '_billing_postcode', true));
+			update_post_meta( $order_id, '_billing_email',          get_post_meta($original_order_id, '_billing_email', true));
+			update_post_meta( $order_id, '_billing_phone',          get_post_meta($original_order_id, '_billing_phone', true));
+			update_post_meta( $order_id, '_billing_address_1',      get_post_meta($original_order_id, '_billing_address_1', true));
+			update_post_meta( $order_id, '_billing_address_2',      get_post_meta($original_order_id, '_billing_address_2', true));
+			update_post_meta( $order_id, '_billing_country',        get_post_meta($original_order_id, '_billing_country', true));
+			update_post_meta( $order_id, '_billing_first_name',     get_post_meta($original_order_id, '_billing_first_name', true));
+			update_post_meta( $order_id, '_billing_last_name',      get_post_meta($original_order_id, '_billing_last_name', true));
+			update_post_meta( $order_id, '_billing_company',        get_post_meta($original_order_id, '_billing_company', true));
+		}
+	
+		private function duplicate_shipping_fieds($original_order_id, $order_id) {
+			update_post_meta( $order_id, '_shipping_country',       get_post_meta($original_order_id, '_shipping_country', true));
+			update_post_meta( $order_id, '_shipping_first_name',    get_post_meta($original_order_id, '_shipping_first_name', true));
+			update_post_meta( $order_id, '_shipping_last_name',     get_post_meta($original_order_id, '_shipping_last_name', true));
+			update_post_meta( $order_id, '_shipping_company',       get_post_meta($original_order_id, '_shipping_company', true));
+			update_post_meta( $order_id, '_shipping_address_1',     get_post_meta($original_order_id, '_shipping_address_1', true));
+			update_post_meta( $order_id, '_shipping_address_2',     get_post_meta($original_order_id, '_shipping_address_2', true));
+			update_post_meta( $order_id, '_shipping_city',          get_post_meta($original_order_id, '_shipping_city', true));
+			update_post_meta( $order_id, '_shipping_state',         get_post_meta($original_order_id, '_shipping_state', true));
+			update_post_meta( $order_id, '_shipping_postcode',      get_post_meta($original_order_id, '_shipping_postcode', true));
+		}
+	
+	  // TODO: same as duplicating order from user side
+		private function duplicate_line_items($original_order, $order_id) {
+			foreach($original_order->get_items() as $originalOrderItem){
+				$itemName = $originalOrderItem['name'];
+				$qty = $originalOrderItem['qty'];
+				$lineTotal = $originalOrderItem['line_total'];
+				$lineTax = $originalOrderItem['line_tax'];
+				$productID = $originalOrderItem['product_id'];
+	
+				$item_id = wc_add_order_item( $order_id, array(
+						'order_item_name'       => $itemName,
+						'order_item_type'       => 'line_item'
+				) );
+	
+				wc_add_order_item_meta( $item_id, '_qty', $qty );
+		  // TODO: Is it ok to uncomment this?
+				wc_add_order_item_meta( $item_id, '_tax_class', $originalOrderItem['tax_class'] );
+				wc_add_order_item_meta( $item_id, '_product_id', $productID );
+		  // TODO: Is it ok to uncomment this?
+				wc_add_order_item_meta( $item_id, '_variation_id', $originalOrderItem['variation_id'] );
+				wc_add_order_item_meta( $item_id, '_line_subtotal', wc_format_decimal( $lineTotal ) );
+				wc_add_order_item_meta( $item_id, '_line_total', wc_format_decimal( $lineTotal ) );
+				/* wc_add_order_item_meta( $item_id, '_line_tax', wc_format_decimal( '0' ) ); */
+				wc_add_order_item_meta( $item_id, '_line_tax', wc_format_decimal( $lineTax ) );
+		  // TODO: Is it ok to uncomment this?
+				/* wc_add_order_item_meta( $item_id, '_line_subtotal_tax', wc_format_decimal( '0' ) ); */
+				wc_add_order_item_meta( $item_id, '_line_subtotal_tax', wc_format_decimal( $originalOrderItem['line_subtotal_tax'] ) );
+			}
+	
+		// TODO This is what is in order_again of class-wc-form-handler.php  
+		// Can it be reused or refactored into own function?
+		//
+			// Copy products from the order to the cart
+			/* foreach ( $order->get_items() as $item ) { */
+			/* 	// Load all product info including variation data */
+			/* 	$product_id   = (int) apply_filters( 'woocommerce_add_to_cart_product_id', $item['product_id'] ); */
+			/* 	$quantity     = (int) $item['qty']; */
+			/* 	$variation_id = (int) $item['variation_id']; */
+			/* 	$variations   = array(); */
+			/* 	$cart_item_data = apply_filters( 'woocommerce_order_again_cart_item_data', array(), $item, $order ); */
+	
+			/* 	foreach ( $item['item_meta'] as $meta_name => $meta_value ) { */
+			/* 		if ( taxonomy_is_product_attribute( $meta_name ) ) { */
+			/* 			$variations[ $meta_name ] = $meta_value[0]; */
+			/* 		} elseif ( meta_is_product_attribute( $meta_name, $meta_value[0], $product_id ) ) { */
+			/* 			$variations[ $meta_name ] = $meta_value[0]; */
+			/* 		} */
+			/* 	} */
+		}
+	
+		private function duplicate_shipping_items($original_order, $order_id) {
+			$original_order_shipping_items = $original_order->get_items('shipping');
+	
+			foreach ( $original_order_shipping_items as $original_order_shipping_item ) {
+				$item_id = wc_add_order_item( $order_id, array(
+					'order_item_name'       => $original_order_shipping_item['name'],
+					'order_item_type'       => 'shipping'
+				) );
+				if ( $item_id ) {
+					wc_add_order_item_meta( $item_id, 'method_id', $original_order_shipping_item['method_id'] );
+					wc_add_order_item_meta( $item_id, 'cost', wc_format_decimal( $original_order_shipping_item['cost'] ) );
+	
+			// TODO: Does not store the shipping taxes
+					/* wc_add_order_item_meta( $item_id, 'taxes', $original_order_shipping_item['taxes'] ); */
+				}
+			}
+		}
+	
+		private function duplicate_coupons($original_order, $order_id) {
+			$original_order_coupons = $original_order->get_items('coupon');
+			foreach ( $original_order_coupons as $original_order_coupon ) {
+				$item_id = wc_add_order_item( $order_id, array(
+					'order_item_name'       => $original_order_coupon['name'],
+					'order_item_type'       => 'coupon'
+				) );
+				// Add line item meta
+				if ( $item_id ) {
+					wc_add_order_item_meta( $item_id, 'discount_amount', $original_order_coupon['discount_amount'] );
+				}
+			}
+		}
+	
+		private function duplicate_payment_info($original_order_id, $order_id, $order) {
+			update_post_meta( $order_id, '_payment_method',         get_post_meta($original_order_id, '_payment_method', true) );
+			update_post_meta( $order_id, '_payment_method_title',   get_post_meta($original_order_id, '_payment_method_title', true) );
+			/* update_post_meta( $order->id, 'Transaction ID',         get_post_meta($original_order_id, 'Transaction ID', true) ); */
+			/* $order->payment_complete(); */
+		}
+	
+		private function add_order_note($original_order_id, $order) {
+			$updateNote = 'This order was duplicated from order ' . $original_order_id . '.';
+			/* $order->update_status('processing'); */
+			$order->add_order_note($updateNote);
 		}
 
 	}

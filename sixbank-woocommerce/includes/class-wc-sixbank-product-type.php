@@ -1,4 +1,5 @@
 <?php
+//add_filter( 'product_type_selector', 'sixbank_add_custom_product_type' );
 add_filter( 'init', 'sixbank_create_custom_product_type' );
 add_filter( 'woocommerce_product_class', 'sixbank_woocommerce_product_class', 10, 2 );
 add_action( 'admin_footer', 'simple_subscription_custom_js' );
@@ -6,6 +7,8 @@ add_action( 'admin_footer', 'admin_options' );
 add_filter( 'woocommerce_add_to_cart_validation', 'is_product_the_same_type',10,3);
 add_action( 'woocommerce_single_product_summary', 'sixbank_subscription_template', 60 );
 add_action( 'woocommerce_sixbank_subscription_to_cart', 'sixbank_subscription_add_to_cart', 30 );
+//add_action( 'woocommerce_product_options_general_product_data', 'sixbank_product_fields' );
+//add_action( 'woocommerce_process_product_meta', 'sixbank_product_fields_save' );
 add_filter( 'woocommerce_cart_item_quantity', 'sixbank_product_change_quantity', 10, 3);
 add_action('woocommerce_check_cart_items', 'validate_all_cart_contents');
 add_filter( 'pre_option_woocommerce_default_gateway' . '__return_false', 99 );
@@ -51,24 +54,60 @@ function validate_all_cart_contents(){
     
     $count = 0;
     $othertype = false;
+    $prevGroup = false;
+    
     foreach ( WC()->cart->get_cart() as $cart_item_key => $values ) {
         $_product = $values['data']; 
+        
+        //Verificar se está em algum grupo ou se é recorrente        
+        
+        $group = wc_get_first_parent($values['product_id']);
+        if (!$prevGroup)
+            $prevGroup = $group;
+        if ($group)
+        $sixbank_recurrent = get_post_meta($group, 'sixbank_product_recurrent', true);
+        else
         $sixbank_recurrent = get_post_meta($values['product_id'], 'sixbank_product_recurrent', true);
-        if ($sixbank_recurrent == 'yes'){        
+
+        if ($sixbank_recurrent == 'yes' && $prevGroup == $group){            
+        //if ($_product->is_type('sixbank_subscription')){            
             $count++;            
         }else{
             $othertype = true;
         }
-    }   
+    }
         
     $payment_gateway = WC()->payment_gateways->payment_gateways()['sixbank_credit'];
     $message = property_exists( $payment_gateway , 'validate_recurrent_product' ) ? $payment_gateway->validate_recurrent_product : '';
     if($count > 0 && $othertype)  {
         wc_add_notice( $message, 'error' );
         return false;
+    }if ($count > 0){
+        WC()->session->set('cart_recurrent', true);
+        WC()->session->set('group_id', $prevGroup);
     }else{
+        WC()->session->set('cart_recurrent', false);
         return true;
     }
+}
+
+function wc_get_first_parent($prod_id, $plain_id = true) {
+    $group_args = array(
+      'post_type' => 'product',
+      'meta_query' => array(
+        array(
+          'key' => '_children',
+          'value' => 'i:' . $prod_id . ';',
+          'compare' => 'LIKE',
+        )
+      )
+     );
+    $parents = get_posts( $group_args );
+    $ret_prod = count($parents) > 0 ? array_shift($parents) : false;
+    if ($ret_prod && $plain_id) {
+      $ret_prod = $ret_prod->ID;
+    }
+    return $ret_prod;
 }
 function wpb_hook_javascript() {
     ?>
@@ -154,10 +193,20 @@ function is_product_the_same_type($valid, $product_id, $quantity) {
     
     $count = 0;
     $othertype = false;
+    $prevGroup = false;
     foreach ( $woocommerce->cart->get_cart() as $cart_item_key => $values ) {
         $_product = $values['data']; 
+        
+        $group = wc_get_first_parent($values['product_id']);
+        if (!$prevGroup)
+            $prevGroup = $group;
+        if ($group)
+        $sixbank_recurrent = get_post_meta($group, 'sixbank_product_recurrent', true);
+        else
         $sixbank_recurrent = get_post_meta($values['product_id'], 'sixbank_product_recurrent', true);
-        if ($sixbank_recurrent == 'yes'){        
+    
+        if ($sixbank_recurrent == 'yes' && $prevGroup == $group){
+        //if ($_product->is_type('sixbank_subscription')){            
             $count++;            
         }else{
             $othertype = true;
@@ -165,15 +214,22 @@ function is_product_the_same_type($valid, $product_id, $quantity) {
     }
     $_is_sub = false;
     $_product = wc_get_product( $product_id );
+
+    //$sixbank_recurrent = get_post_meta($product_id, 'sixbank_product_recurrent', true);
+    $productGroup = wc_get_first_parent($product_id);    
+    if ($productGroup)
+    $sixbank_recurrent = get_post_meta($productGroup, 'sixbank_product_recurrent', true);
+    else
     $sixbank_recurrent = get_post_meta($product_id, 'sixbank_product_recurrent', true);
-    if ($sixbank_recurrent == 'yes'){   
+
+    if ($sixbank_recurrent == 'yes'){
+    //if ($_product->is_type('sixbank_subscription')){        
         $_is_sub = true;            
     }
         
     $payment_gateway = WC()->payment_gateways->payment_gateways()['sixbank_credit'];
-    $message = property_exists( $payment_gateway , 'validate_recurrent_product' ) ? $payment_gateway->validate_recurrent_product : '';
-
-    if($othertype && $_is_sub || $count > 0)  {
+    $message = property_exists( $payment_gateway , 'validate_recurrent_product' ) ? $payment_gateway->validate_recurrent_product : '';       
+    if(($othertype && $_is_sub) || ($count > 0 && $prevGroup != $productGroup))  {
         wc_add_notice( $message, 'error' );
         return false;
     }else{
@@ -249,8 +305,9 @@ function sixbank_product_change_quantity( $product_quantity, $cart_item_key, $ca
     $product_id = $cart_item['product_id'];
     $product = wc_get_product($product_id);
     // whatever logic you want to determine whether or not to alter the input
-    $sixbank_recurrent = get_post_meta($product_id, 'sixbank_product_recurrent', true);
-    if ($sixbank_recurrent == 'yes'){
+    $sixbank_recurrent = get_post_meta($product_id, 'sixbank_product_recurrent', true);    
+    if (WC()->session->get('cart_recurrent')){
+    //if ( $product->is_type('sixbank_subscription') ) {
         return '<span>1</span>';
     }
 

@@ -366,7 +366,8 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 			foreach ( $woocommerce->cart->get_cart() as $cart_item_key => $values ) {
 				$_product = $values['data']; 
 				$sixbank_recurrent = get_post_meta($values['product_id'], 'sixbank_product_recurrent', true);
-        		if ($sixbank_recurrent == 'yes'){          
+        		if (WC()->session->get('cart_recurrent')){
+				//if ($_product->is_type('sixbank_subscription')){            
 					$_is_sub = true;         
 				}
 			}
@@ -376,7 +377,8 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 				//Get the WC_Product object
 				$_product = $item->get_product();
 				$sixbank_recurrent = get_post_meta($item['product_id'], 'sixbank_product_recurrent', true);
-				if ($sixbank_recurrent == 'yes'){
+				if (WC()->session->get('cart_recurrent')){
+				//if ($_product->is_type('sixbank_subscription')){
 					$_is_sub = true; 
 				}
 			}

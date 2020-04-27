@@ -476,28 +476,48 @@ class WC_Sixbank_API {
 			$expiry_date = ( 4 == strlen( $expiry_date ) ) ? '20' . $expiry_date : $expiry_date;
 			
 			$subscription = false;
-			//Verifica se a compra é de recorrencia
-			foreach ( WC()->cart->get_cart_contents() as $key => $values ) {
-				$_product = $values['data'];
-				$sixbank_recurrent = get_post_meta($_product->get_id(), 'sixbank_product_recurrent', true);
-        		if ($sixbank_recurrent == 'yes'){
-					$subscription = true;					
-					$frequency = (int) get_post_meta($_product->get_id(), 'sixbank_subscription_frequency', true);
-					$period = get_post_meta($_product->get_id(), 'sixbank_subscription_period', true);
-					$days = get_post_meta($_product->get_id(), 'sixbank_subscription_days', true);
-					$endDate = date('Y-m-d', strtotime(sprintf("+ %d $period", $days)));
-					if ($period == 'day'){
-						$period = Rebill::DAILY;
-					}else if ($period == 'week'){
-						$period = Rebill::WEEKLY;
-					}else if ($period == 'month'){
-						$period = Rebill::MONTHLY;
-					}else if ($period == 'year'){
-						$period = Rebill::YEARLY;
-					}
+			//Se é recorrencia e grupo
+			if (WC()->session->get('cart_recurrent') && WC()->session->get('group_id')){
+				$group_id = WC()->session->get('group_id');
+				$subscription = true;					
+				$frequency = (int) get_post_meta($group_id, 'sixbank_subscription_frequency', true);
+				$period = get_post_meta($group_id, 'sixbank_subscription_period', true);
+				$days = get_post_meta($group_id, 'sixbank_subscription_days', true);
+				$endDate = date('Y-m-d', strtotime(sprintf("+ %d $period", $days)));
+				if ($period == 'day'){
+					$period = Rebill::DAILY;
+				}else if ($period == 'week'){
+					$period = Rebill::WEEKLY;
+				}else if ($period == 'month'){
+					$period = Rebill::MONTHLY;
+				}else if ($period == 'year'){
+					$period = Rebill::YEARLY;
+				}
+			}else{
+				//Verifica se a compra é de recorrencia
+				foreach ( WC()->cart->get_cart_contents() as $key => $values ) {
+					$_product = $values['data'];
+					$sixbank_recurrent = get_post_meta($values['product_id'], 'sixbank_product_recurrent', true);
+					if ($sixbank_recurrent == 'yes'){
+					//if ($_product->is_type('sixbank_subscription')){
+						$subscription = true;					
+						$frequency = (int) get_post_meta($values['product_id'], 'sixbank_subscription_frequency', true);
+						$period = get_post_meta($values['product_id'], 'sixbank_subscription_period', true);
+						$days = get_post_meta($values['product_id'], 'sixbank_subscription_days', true);
+						$endDate = date('Y-m-d', strtotime(sprintf("+ %d $period", $days)));
+						if ($period == 'day'){
+							$period = Rebill::DAILY;
+						}else if ($period == 'week'){
+							$period = Rebill::WEEKLY;
+						}else if ($period == 'month'){
+							$period = Rebill::MONTHLY;
+						}else if ($period == 'year'){
+							$period = Rebill::YEARLY;
+						}
 
-					if ( 'yes' == $this->gateway->debug ) {
-						$this->gateway->log->add( $this->gateway->id, "log subscription.. Frequency: $frequency | Period: $period | Days: $days | endDate: $endDate" );
+						if ( 'yes' == $this->gateway->debug ) {
+							$this->gateway->log->add( $this->gateway->id, "log subscription.. Frequency: $frequency | Period: $period | Days: $days | endDate: $endDate" );
+						}
 					}
 				}
 			}
