@@ -62,8 +62,8 @@
 		function setInstallmentsFields( card ) {
 			var installments = $( '#sixbank-credit-payment-form #sixbank-installments' );
 
-			$( '#sixbank-credit-payment-form #sixbank-installments' ).empty();
-			$( '#sixbank-credit-payment-form #sixbank-installments' ).prepend( $.data( document.body, 'sixbank_credit_installments' ) );
+			//$( '#sixbank-credit-payment-form #sixbank-installments' ).empty();
+			//$( '#sixbank-credit-payment-form #sixbank-installments' ).prepend( $.data( document.body, 'sixbank_credit_installments' ) );
 
 			if ( 'discover' === card ) {
 				$( 'option', installments ).not( '.sixbank-at-sight' ).remove();
