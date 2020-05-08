@@ -712,7 +712,7 @@ if ( ! class_exists( 'WC_Sixbank' ) ) :
 			wp_register_style( 'wc-sixbank-checkout-icons', plugins_url( 'assets/css/checkout-icons' . $suffix . '.css', __FILE__ ), array(), WC_Sixbank::VERSION );
 			wp_register_style( 'wc-sixbank-checkout-webservice', plugins_url( 'assets/css/checkout-webservice' . $suffix . '.css', __FILE__ ), array(), WC_Sixbank::VERSION );
 
-			wp_enqueue_script( 'wc-sixbank-checkout-ws', plugins_url( 'assets/js/checkout-ws.js', __FILE__ ), array( 'jquery' ), WC_Sixbank::VERSION, true );			
+			wp_enqueue_script( 'wc-sixbank-checkout-ws', plugins_url( 'assets/js/checkout-ws.js', __FILE__ ), array( 'jquery' ), time(), true );			
 			
 		}
 
