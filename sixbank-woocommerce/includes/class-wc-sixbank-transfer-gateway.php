@@ -71,7 +71,7 @@ class WC_Sixbank_Transfer_Gateway extends WC_Sixbank_Helper {
 	}
 
 	function wc_sixbank_pending_payment_instructions( $order_id ) {
-		$order = new WC_Order( $order_id );	
+		$order = new \WC_Order( $order_id );	
 
 		if ( 'pending' === $order->status && 'sixbank_transfer' == $order->payment_method ) {
 			$html = '<div class="woocommerce-info">';
