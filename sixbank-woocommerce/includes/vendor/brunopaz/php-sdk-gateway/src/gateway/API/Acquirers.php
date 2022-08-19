@@ -36,5 +36,6 @@ abstract class Acquirers
     public const WORLDPAY                    = 31;
     public const GRANITO                     = 32;
     public const SIXBANK                     = 33;
+    public const SIXBANK_PSP                 = 37;
 
 }
