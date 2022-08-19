@@ -169,7 +169,8 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 					'privatelabel'     => __( 'PrivateLabel', 'sixbank-woocommerce' ),					
 					'stone'       => __( 'STONE PAGAMENTOS', 'sixbank-woocommerce' ),
 					'worldpay'       => __( 'World Pay', 'sixbank-woocommerce' ),					
-					'sixbank'       => __( 'Sixbank', 'sixbank-woocommerce' ),					
+					'sixbank'       => __( 'Sixbank', 'sixbank-woocommerce' ),
+					'sixbank_psp'       => __( 'Sixbank PSP', 'sixbank-woocommerce' ),
 				),
 			),
 			'antifraud' => array(
@@ -413,6 +414,7 @@ class WC_Sixbank_Credit_Gateway extends WC_Sixbank_Helper {
 		if ($pm == 'stone') $name = Acquirers::STONE;
 		if ($pm == 'worldpay') $name = Acquirers::WORLDPAY;
 		if ($pm == 'sixbank') $name = Acquirers::SIXBANK;
+		if ($pm == 'sixbank_psp') $name = Acquirers::SIXBANK_PSP;
 			
 		
 		
